@@ -1,0 +1,27 @@
+NODE_ENV = development
+PORT = 3006
+ 
+URI_MONGO=mongodb://localhost:27017/HaircutFiveFriends
+ 
+JWT_SECRET=MyVerySecretKeyForJWTTokenAuthenticationWith256Bits!
+JWT_ISSUER=The5FadeFriends
+JWT_AUDIENCE=The5FadeFriends
+ 
+CLOUDINARY_CLOUD_NAME=djuxr89ny
+CLOUDINARY_API_KEY=756418949615516
+CLOUDINARY_API_SECRET=kueZn4ZlPo8fPEI6LwiYtnwTBiQ
+CLOUDINARY_BASE_URL=https://res.cloudinary.com/djuxr89ny/image/upload/
+ 
+CLOUDINARY_FOLDER=HaircutFiveFriends/images
+ 
+GOOGLE_PROJECT_ID=project-4be61ab3-b84b-41d6-bf6
+GEMINI_API_KEY=AIzaSyCnaDDur3qLbcmGs2Ar7KgC2MPoGUiP4Bs
+GOOGLE_VERTEX_LOCATION=us-central1
+VERTEX_TEXT_MODEL=gemini-2.5-flash
+GEMINI_IMAGE_MODEL=gemini-3-pro-image-preview
+VERTEX_IMAGE_MODEL=imagen-3.0-capability
+GOOGLE_APPLICATION_CREDENTIALS=C:/Users/Angel Geovanny/Downloads/project-4be61ab3-b84b-41d6-bf6-0343c4f77f6a.json
+ 
+Credenciales Cloudinary
+Marcos-JG
+marcosjgc1538
