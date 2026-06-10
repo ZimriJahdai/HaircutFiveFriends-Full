@@ -3,7 +3,7 @@ PORT=3005
  
 # Database PostgreSQL
 DB_HOST=localhost
-DB_PORT=5438
+DB_PORT=5432
 DB_NAME=HaircutFiveFriends
 DB_USERNAME=postgres
 DB_PASSWORD=root
