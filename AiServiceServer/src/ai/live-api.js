@@ -1,12 +1,28 @@
 import WebSocket from 'ws';
+import { GoogleAuth } from 'google-auth-library';
 import { systemInstruction, barberTools } from './tools.js';
 import { getVoiceMemory } from './voice-memory.js';
 import { executeFunctionCall } from './barber-tools-executor.js';
 import { Chat } from '../chats/chat.model.js';
 import { getUserIdFromToken } from '../../middlewares/validate-JWT.js';
 
-const buildGeminiWsUrl = (apiKey) => (
-    `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${apiKey}`
+// GCP Configs
+const location = process.env.GOOGLE_CLOUD_LOCATION || process.env.GOOGLE_VERTEX_LOCATION || 'us-central1';
+const projectId = process.env.GOOGLE_CLOUD_PROJECT || process.env.GOOGLE_PROJECT_ID;
+
+// Inicializador de Google Auth para ADC
+const auth = new GoogleAuth({
+    scopes: 'https://www.googleapis.com/auth/cloud-platform',
+});
+
+// URL WebSocket para Vertex AI
+const buildVertexWsUrl = (loc) => (
+    `wss://${loc}-aiplatform.googleapis.com/ws/google.cloud.aiplatform.v1beta1.LlmBidiService/BidiGenerateContent`
+);
+
+// Formato de Modelo Completo para Vertex AI
+const buildVertexModelPath = (proj, loc, modelId) => (
+    `projects/${proj}/locations/${loc}/publishers/google/models/${modelId}`
 );
 
 const extractVoiceTranscripts = (payload) => {
@@ -61,20 +77,39 @@ const appendVoiceMessage = async (userId, role, text) => {
 
 export const setupLiveApi = (wss) => {
     wss.on('connection', async (ws) => {
-        console.log('Cliente WebSocket conectado para Live API');
+        console.log('Cliente WebSocket conectado para Live API (Vertex ADC)');
 
-        const apiKey = process.env.GEMINI_API_KEY;
-        if (!apiKey) {
-            console.error('[LiveAPI] GEMINI_API_KEY no esta configurada');
+        let accessToken = '';
+        try {
+            // Obtener el Token Bearer dinámicamente mediante ADC
+            const authClient = await auth.getClient();
+            const tokenResponse = await authClient.getAccessToken();
+            accessToken = tokenResponse.token;
+        } catch (authError) {
+            console.error('[LiveAPI] Error obteniendo token de acceso ADC:', authError);
             ws.send(JSON.stringify({
                 event: 'gemini_error',
-                message: 'GEMINI_API_KEY no esta configurada en el servidor.',
+                message: 'Error de autenticación ADC en el servidor.',
             }));
             ws.close();
             return;
         }
 
-        const geminiSocket = new WebSocket(buildGeminiWsUrl(apiKey));
+        if (!accessToken) {
+            console.error('[LiveAPI] Token de acceso vacio');
+            ws.close();
+            return;
+        }
+
+        const wsUrl = buildVertexWsUrl(location);
+        
+        // Conectar a Vertex AI pasando las credenciales Bearer
+        const geminiSocket = new WebSocket(wsUrl, {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+            }
+        });
+
         let setupReady = false;
         const pendingMessages = [];
         const memoryText = await getVoiceMemory();
@@ -89,7 +124,8 @@ export const setupLiveApi = (wss) => {
         const sendSetup = () => {
             const setupMessage = {
                 setup: {
-                    model: 'models/gemini-3.1-flash-live-preview',
+                    // Nota: Vertex requiere la ruta completa del recurso para el modelo
+                    model: buildVertexModelPath(projectId, location, 'gemini-3.1-flash-live-preview'),
                     generationConfig: {
                         responseModalities: ['AUDIO'],
                     },
@@ -100,12 +136,12 @@ export const setupLiveApi = (wss) => {
                 },
             };
 
-            console.log('[LiveAPI] Setup enviado a Gemini');
+            console.log('[LiveAPI] Setup enviado a Vertex AI');
             geminiSocket.send(JSON.stringify(setupMessage));
         };
 
         geminiSocket.on('open', () => {
-            console.log('[LiveAPI] Socket abierto con Gemini Live');
+            console.log('[LiveAPI] Socket abierto con Gemini Live (Vertex)');
             sendSetup();
         });
 

@@ -18,8 +18,12 @@ export const analyzeBarberReviews = async (req, res) => {
         // 2. Preparar el prompt para Gemini
         const reviewsText = reviews.map(r => `- [${r.rating} estrellas]: ${r.comment}`).join('\n');
         
-        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-        const model = ai.getGenerativeModel({ model: 'gemini-2.5-flash' });
+        // Inicializar con ADC y Vertex AI
+        const ai = new GoogleGenAI({
+            vertexai: true,
+            project: process.env.GOOGLE_CLOUD_PROJECT || process.env.GOOGLE_PROJECT_ID,
+            location: process.env.GOOGLE_CLOUD_LOCATION || 'us-central1'
+        });
 
         const prompt = `
             Analiza las siguientes reseñas de un barbero y genera un reporte de insights en español.
@@ -34,8 +38,14 @@ export const analyzeBarberReviews = async (req, res) => {
             ${reviewsText}
         `;
 
-        const result = await model.generateContent(prompt);
-        const report = result.response.text();
+        // Corrección de sintaxis del SDK: usar ai.models.generateContent directamente
+        const response = await ai.models.generateContent({
+            model: process.env.VERTEX_TEXT_MODEL || 'gemini-2.5-flash',
+            contents: prompt
+        });
+
+        // Corrección de acceso al texto de respuesta (propiedad .text, no método .text())
+        const report = response.text;
 
         return res.json({
             barberId,

@@ -1,30 +1,25 @@
-import pkg from "@google-cloud/vertexai";
-const { VertexAI } = pkg;
-
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Modality } from "@google/genai";
 import fs from "fs/promises";
 import path from "path";
 import "dotenv/config";
 
 // -- Configuracion ------------------------------------------------------------
-const GOOGLE_PROJECT_ID = process.env.GOOGLE_PROJECT_ID || "project-4be61ab3-b84b-41d6-bf6";
-const GOOGLE_VERTEX_LOCATION = process.env.GOOGLE_VERTEX_LOCATION || "us-central1";
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "AIzaSyDfaMghcRlRhTk4N50xd5jvaDQva8Wg3Zk";
+const GOOGLE_PROJECT_ID = process.env.GOOGLE_CLOUD_PROJECT || process.env.GOOGLE_PROJECT_ID;
+const GOOGLE_VERTEX_LOCATION = process.env.GOOGLE_CLOUD_LOCATION || process.env.GOOGLE_VERTEX_LOCATION || "us-central1";
 
-if (!GOOGLE_PROJECT_ID) throw new Error("Falta GOOGLE_PROJECT_ID en el entorno");
-if (!GEMINI_API_KEY) throw new Error("Falta GEMINI_API_KEY en el entorno");
+if (!GOOGLE_PROJECT_ID) {
+  throw new Error("Falta GOOGLE_CLOUD_PROJECT o GOOGLE_PROJECT_ID en el entorno");
+}
 
-const TEXT_MODEL = process.env.VERTEX_TEXT_MODEL || "gemini-2.5-flash";
+const TEXT_MODEL = process.env.VERTEX_TEXT_MODEL || "gemini-3.1-flash-lite-preview";
 const GEMINI_IMAGE_MODEL = process.env.GEMINI_IMAGE_MODEL || "gemini-3-pro-image-preview";
 
-// Cliente Vertex AI - para describeFace
-const vertex = new VertexAI({
+// Inicializar el SDK con Vertex AI y ADC de manera nativa
+const ai = new GoogleGenAI({
+  vertexai: true,
   project: GOOGLE_PROJECT_ID,
   location: GOOGLE_VERTEX_LOCATION,
 });
-
-// Cliente Gemini AI Studio - para edicion de imagen
-const geminiAI = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 // -- Helpers ------------------------------------------------------------------
 function sanitizeBase64(b64) {
@@ -167,7 +162,7 @@ function buildHaircutPrompt(faceSummary, haircutOptions = {}) {
   );
 }
 
-// -- describeFace (Gemini API via Fetch) --------------------------------------
+// -- describeFace (Gemini API via SDK en Vertex AI) --------------------------
 export async function describeFace({ imageBase64, imagePath, mimeType }) {
   const hasPath = Boolean(imagePath);
   const { base64, mime } = hasPath
@@ -176,36 +171,21 @@ export async function describeFace({ imageBase64, imagePath, mimeType }) {
 
   if (!base64) throw new Error("No se proporciono imagen en base64");
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${TEXT_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
-
-  const body = {
-    contents: [{
-      parts: [
-        { text: "Analiza el rostro y responde SOLO con un JSON valido (sin markdown ni texto extra) con estas claves exactas: faceShape, hairTexture, hairColor, facialLines, recommendedHaircutStyle. Cada valor debe ser una frase breve en espanol." },
+  const response = await generateWithRetry(async () => {
+    return await ai.models.generateContent({
+      model: TEXT_MODEL,
+      contents: [
+        "Analiza el rostro y responde SOLO con un JSON valido (sin markdown ni texto extra) con estas claves exactas: faceShape, hairTexture, hairColor, facialLines, recommendedHaircutStyle. Cada valor debe ser una frase breve en espanol.",
         { inlineData: { data: base64, mimeType: mime } }
       ]
-    }]
-  };
-
-  const response = await generateWithRetry(async () => {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
     });
-    if (!res.ok) {
-      const errorText = await res.text();
-      throw new Error(`Gemini API Error (${res.status}): ${errorText}`);
-    }
-    return res.json();
   });
 
-  const parts = response.candidates?.[0]?.content?.parts || [];
-  const rawText = parts.map((p) => p.text).filter(Boolean).join(" ");
+  const rawText = response.text;
   return toStructuredFaceSummary(rawText);
 }
 
-// -- proposeHaircutImage (Gemini API via Fetch) -------------------------------
+// -- proposeHaircutImage (Gemini API via SDK en Vertex AI) --------------------
 export async function proposeHaircutImage(
   faceSummary,
   { imageBase64, imagePath, mimeType, haircutName, description, length, style } = {}
@@ -219,35 +199,20 @@ export async function proposeHaircutImage(
 
   const editPrompt = buildHaircutPrompt(faceSummary, { haircutName, description, length, style });
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_IMAGE_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
-
-  const body = {
-    contents: [{
-      parts: [
-        { inlineData: { data: base64, mimeType: mime } },
-        { text: editPrompt }
-      ]
-    }],
-    generationConfig: {
-      responseModalities: ["IMAGE", "TEXT"]
-    }
-  };
-
   const response = await generateWithRetry(async () => {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
+    return await ai.models.generateContent({
+      model: GEMINI_IMAGE_MODEL,
+      contents: [
+        { inlineData: { data: base64, mimeType: mime } },
+        editPrompt
+      ],
+      config: {
+        responseModalities: [Modality.TEXT, Modality.IMAGE]
+      }
     });
-    if (!res.ok) {
-      const errorText = await res.text();
-      throw new Error(`Gemini API Error (${res.status}): ${errorText}`);
-    }
-    return res.json();
   });
 
-  const rawCandidate = response.candidates?.[0];
-  const parts = rawCandidate?.content?.parts ?? [];
+  const parts = response.candidates?.[0]?.content?.parts ?? [];
   const imagePart = parts.find((p) => p.inlineData?.data);
 
   if (!imagePart) {
@@ -257,4 +222,3 @@ export async function proposeHaircutImage(
 
   return imagePart.inlineData.data;
 }
-

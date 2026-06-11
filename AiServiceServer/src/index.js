@@ -12,10 +12,6 @@ import aiHaircutRoutes from './aiHaircut/aiHaircut.routes.js';
 import aiHaircutImageRoutes from './aiHaircutImage/image.routes.js';
 import { setupLiveApi } from './ai/live-api.js';
 import authRoutes from './auth/auth.routes.js';
-<<<<<<< HEAD
-=======
-import swaggerUi from 'swagger-ui-express';
->>>>>>> 7cbf481cb73b47ed36b077cff49bc7ed1f607476
 import { swaggerSpec } from '../configs/swagger.js';
 
 dotenv.config();
