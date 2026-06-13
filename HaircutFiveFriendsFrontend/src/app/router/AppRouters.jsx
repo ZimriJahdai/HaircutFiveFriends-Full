@@ -9,6 +9,7 @@ import AdminRestaurantePage from '../pages/AdminRestaurantePage.jsx';
 import ClientHome from '../pages/ClientHome.jsx';
 import { ProtectedRoute } from './ProtectedRoute.jsx';
 import { RoleGuard } from './RoleGuard.jsx';
+import DashboardLayout from '../../shared/components/layout/DashboardLayout.jsx'; // 👈 agregar
 
 export const AppRoutes = () => {
   return (
@@ -19,16 +20,35 @@ export const AppRoutes = () => {
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
+      {/* Rutas admin */}
       <Route
         path="/dashboard"
         element={
           <ProtectedRoute>
             <RoleGuard allowedRoles={['ADMIN_ROLE']}>
-              <DashboardHome />
+              <DashboardLayout />
             </RoleGuard>
           </ProtectedRoute>
         }
-      />
+      >
+        <Route index element={<DashboardHome />} />
+        {/* Aquí irán tus páginas admin: citas, clientes, etc. */}
+      </Route>
+
+      {/* Rutas cliente */}
+      <Route
+        path="/client"
+        element={
+          <ProtectedRoute>
+            <RoleGuard allowedRoles={['USER_ROLE']}>
+              <DashboardLayout />
+            </RoleGuard>
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<ClientHome />} />
+        {/* Aquí irán tus páginas cliente: reservar, citas, perfil, etc. */}
+      </Route>
 
       <Route
         path="/admin-restaurante"
@@ -36,17 +56,6 @@ export const AppRoutes = () => {
           <ProtectedRoute>
             <RoleGuard allowedRoles={['ADMIN_RESTAURANTE', 'ADMIN_RESTAURANT']}>
               <AdminRestaurantePage />
-            </RoleGuard>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/client"
-        element={
-          <ProtectedRoute>
-            <RoleGuard allowedRoles={['USER_ROLE']}>
-              <ClientHome />
             </RoleGuard>
           </ProtectedRoute>
         }
