@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../services/authApi.js';
 import { setAuth } from '../utils/authStorage.js';
@@ -9,20 +9,31 @@ export default function LoginPage() {
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const abortRef = useRef(null);
+  const loading = status === 'loading';
+
+  // Aborta el login en vuelo al desmontar.
+  useEffect(() => () => abortRef.current?.abort(), []);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setStatus('loading');
     setError('');
 
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     try {
-      const result = await login({ email, password });
+      const result = await login({ email, password, signal: controller.signal });
       setAuth(result);
       setStatus('success');
       navigate('/chat');
     } catch (err) {
+      if (err?.name === 'AbortError') return; // componente desmontado
       setStatus('error');
       setError(err.message || 'Error al iniciar sesion.');
+    } finally {
+      if (abortRef.current === controller) abortRef.current = null;
     }
   };
 
@@ -43,6 +54,8 @@ export default function LoginPage() {
             onChange={(event) => setEmail(event.target.value)}
             placeholder="correo@dominio.com"
             required
+            autoComplete="email"
+            disabled={loading}
             className="login-input"
           />
 
@@ -54,13 +67,15 @@ export default function LoginPage() {
             onChange={(event) => setPassword(event.target.value)}
             placeholder="********"
             required
+            autoComplete="current-password"
+            disabled={loading}
             className="login-input"
           />
 
-          {error && <div className="login-error">{error}</div>}
+          {error && <div className="login-error" role="alert">{error}</div>}
 
-          <button className="ghost-button" type="submit" disabled={status === 'loading'}>
-            {status === 'loading' ? 'Ingresando...' : 'Ingresar'}
+          <button className="ghost-button" type="submit" disabled={loading} aria-busy={loading}>
+            {loading ? 'Ingresando...' : 'Ingresar'}
           </button>
         </form>
       </div>

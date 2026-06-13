@@ -13,8 +13,22 @@ import aiHaircutImageRoutes from './aiHaircutImage/image.routes.js';
 import { setupLiveApi } from './ai/live-api.js';
 import authRoutes from './auth/auth.routes.js';
 import { swaggerSpec } from '../configs/swagger.js';
+import { errorHandler } from '../middlewares/error-handler.js';
+import { validateGenaiEnv } from '../configs/genai.js';
 
 dotenv.config();
+
+// Validacion de entorno en bootstrap (no como side-effect de import).
+const missingEnv = [...validateGenaiEnv()];
+if (!process.env.JWT_SECRET) missingEnv.push('JWT_SECRET');
+if (missingEnv.length > 0) {
+    console.error(`[Bootstrap] Faltan variables de entorno obligatorias: ${missingEnv.join(', ')}`);
+    process.exit(1);
+}
+if (!process.env.URI_MONGO) {
+    console.warn('[Bootstrap] URI_MONGO no definida; usando mongodb://localhost:27017/GeminiDB por defecto.');
+}
+
 connectDB(); // Conectar a MongoDB
 
 const app = express();
@@ -47,6 +61,9 @@ app.use('/api/reviews', reviewRoutes);
 
 // Swagger UI para TodoGemini
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// Manejador de errores central (debe ir despues de las rutas)
+app.use(errorHandler);
 
 // Módulo 2: Voz en tiempo real (Live API con WebSocket Proxy)
 setupLiveApi(wss);

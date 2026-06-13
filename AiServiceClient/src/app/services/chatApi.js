@@ -1,9 +1,10 @@
 import { CHAT_API_URL } from '../constants/chat.js';
 import { handleUnauthorized } from '../utils/handleAuthError.js';
 
-export const fetchHistory = async ({ userId, token }) => {
+export const fetchHistory = async ({ userId, token, signal }) => {
   const response = await fetch(`${CHAT_API_URL}/${userId}`, {
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    signal,
   });
   if (handleUnauthorized(response)) {
     throw new Error('Sesion expirada. Inicia sesion nuevamente.');
@@ -14,7 +15,7 @@ export const fetchHistory = async ({ userId, token }) => {
   return response.json();
 };
 
-export const sendChatMessage = async ({ userId, input, token }) => {
+export const sendChatMessage = async ({ userId, input, token, signal }) => {
   const response = await fetch(CHAT_API_URL, {
     method: 'POST',
     headers: {
@@ -22,6 +23,7 @@ export const sendChatMessage = async ({ userId, input, token }) => {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify({ userId, input }),
+    signal,
   });
 
   if (handleUnauthorized(response)) {
@@ -35,10 +37,11 @@ export const sendChatMessage = async ({ userId, input, token }) => {
   return response.json();
 };
 
-export const clearChatHistory = async ({ userId, token }) => {
+export const clearChatHistory = async ({ userId, token, signal }) => {
   const response = await fetch(`${CHAT_API_URL}/${userId}`, {
     method: 'DELETE',
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    signal,
   });
 
   if (handleUnauthorized(response)) {

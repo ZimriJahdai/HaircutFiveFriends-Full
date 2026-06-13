@@ -1,60 +1,39 @@
 import axios from 'axios';
-import { GoogleGenAI } from '@google/genai';
+import { analyzeReviewsWithAI } from './reviews.service.js';
 
 const BARBER_API_BASE = 'http://localhost:3006/HaircutFiveFriends/api/v1';
+const REQUEST_TIMEOUT_MS = Number(process.env.HTTP_TIMEOUT_MS) || 15000;
 
-export const analyzeBarberReviews = async (req, res) => {
+export const analyzeBarberReviews = async (req, res, next) => {
+    const { barberId } = req.params;
+
+    // Validacion: barberId presente y con formato razonable (Mongo ObjectId o numerico)
+    if (!barberId || !/^[a-fA-F0-9]{24}$|^\d+$/.test(barberId)) {
+        return res.status(400).json({ error: 'barberId invalido.' });
+    }
+
     try {
-        const { barberId } = req.params;
-
         // 1. Obtener reseñas del barbero
-        const reviewsRes = await axios.get(`${BARBER_API_BASE}/review/barbero/${barberId}`);
+        const reviewsRes = await axios.get(
+            `${BARBER_API_BASE}/review/barbero/${barberId}`,
+            { timeout: REQUEST_TIMEOUT_MS }
+        );
         const reviews = reviewsRes.data;
 
         if (!reviews || reviews.length === 0) {
             return res.json({ message: 'No hay reseñas suficientes para analizar.' });
         }
 
-        // 2. Preparar el prompt para Gemini
-        const reviewsText = reviews.map(r => `- [${r.rating} estrellas]: ${r.comment}`).join('\n');
-        
-        // Inicializar con ADC y Vertex AI
-        const ai = new GoogleGenAI({
-            vertexai: true,
-            project: process.env.GOOGLE_CLOUD_PROJECT || process.env.GOOGLE_PROJECT_ID,
-            location: process.env.GOOGLE_CLOUD_LOCATION || 'us-central1'
-        });
-
-        const prompt = `
-            Analiza las siguientes reseñas de un barbero y genera un reporte de insights en español.
-            Incluye:
-            1. Sentimiento general.
-            2. Temas recurrentes (lo que más gusta y lo que menos).
-            3. Puntos fuertes.
-            4. Áreas de mejora.
-            5. Tendencias observadas.
-
-            Reseñas:
-            ${reviewsText}
-        `;
-
-        // Corrección de sintaxis del SDK: usar ai.models.generateContent directamente
-        const response = await ai.models.generateContent({
-            model: process.env.VERTEX_TEXT_MODEL || 'gemini-2.5-flash',
-            contents: prompt
-        });
-
-        // Corrección de acceso al texto de respuesta (propiedad .text, no método .text())
-        const report = response.text;
+        // 2. Analizar con Gemini (logica en reviews.service.js)
+        const analysis = await analyzeReviewsWithAI(reviews);
 
         return res.json({
             barberId,
             reviewCount: reviews.length,
-            analysis: report
+            analysis,
         });
-
     } catch (error) {
-        console.error('Error al analizar reseñas:', error.message);
-        res.status(500).json({ error: 'Error al analizar las reseñas del barbero.' });
+        // Delega al error-handler central (no filtra detalles internos)
+        return next(error);
     }
 };

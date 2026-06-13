@@ -1,4 +1,4 @@
-import { GoogleGenAI } from '@google/genai';
+import { getGenAI, MODELS } from '../../configs/genai.js';
 import { barberTools, systemInstruction } from './tools.js';
 import { executeFunctionCall } from './barber-tools-executor.js';
 
@@ -25,12 +25,8 @@ export const handleChatAI = async (currentHistory, input, authToken) => {
         const userMessage = { role: 'user', parts: [{ text: input }] };
         const messages = [...currentHistory, userMessage];
 
-        const ai = new GoogleGenAI({
-            vertexai: true,
-            project: process.env.GOOGLE_CLOUD_PROJECT || process.env.GOOGLE_PROJECT_ID,
-            location: process.env.GOOGLE_CLOUD_LOCATION || 'us-central1'
-        });
-        const modelName = process.env.VERTEX_TEXT_MODEL || 'gemini-2.5-flash';
+        const ai = getGenAI();
+        const modelName = MODELS.TEXT;
         const config = {
             systemInstruction: `${systemInstruction}\n\n${historyNote}\nRegla estricta: nunca digas que no tienes historial.`,
             tools: barberTools,

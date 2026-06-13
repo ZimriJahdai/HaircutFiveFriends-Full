@@ -6,6 +6,7 @@ export default function ChatForm({ input, onChange, onSubmit, loading, inputRef 
         type="text"
         value={input}
         onChange={onChange}
+        aria-label="Mensaje para el asistente"
         style={{
           flex: 1,
           padding: '12px',

@@ -1,36 +1,41 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { clearChatHistory, fetchHistory, sendChatMessage } from '../services/chatApi.js';
 import { getAuth } from '../utils/authStorage.js';
 import { createUserMessage } from '../utils/messageUtils.js';
+
+const isAbortError = (error) => error?.name === 'AbortError';
 
 export const useChat = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const sendAbortRef = useRef(null);
   const auth = getAuth();
   const userId = auth?.userId || auth?.userDetails?.id || '';
   const token = auth?.token || '';
 
+  // Aborta cualquier envio en vuelo al desmontar el componente.
+  useEffect(() => () => sendAbortRef.current?.abort(), []);
+
   useEffect(() => {
-    let isMounted = true;
+    const controller = new AbortController();
 
     const loadHistory = async () => {
       try {
         if (!userId || !token) return;
-        const data = await fetchHistory({ userId, token });
-        if (isMounted && data.messages) {
+        const data = await fetchHistory({ userId, token, signal: controller.signal });
+        if (data.messages) {
           setMessages(data.messages);
         }
       } catch (error) {
+        if (isAbortError(error)) return;
         console.error('Error al cargar historial de la DB:', error);
       }
     };
 
     loadHistory();
 
-    return () => {
-      isMounted = false;
-    };
+    return () => controller.abort();
   }, [userId, token]);
 
   const sendMessage = useCallback(async (event) => {
@@ -43,11 +48,19 @@ export const useChat = () => {
     setInput('');
     setLoading(true);
 
+    const controller = new AbortController();
+    sendAbortRef.current = controller;
+
     try {
       if (!userId || !token) {
         throw new Error('Debes iniciar sesion para usar el chat.');
       }
-      const data = await sendChatMessage({ userId, input: currentInput, token });
+      const data = await sendChatMessage({
+        userId,
+        input: currentInput,
+        token,
+        signal: controller.signal,
+      });
       if (data.updatedHistory) {
         setMessages(data.updatedHistory);
       } else if (data.response) {
@@ -57,12 +70,14 @@ export const useChat = () => {
         ]);
       }
     } catch (error) {
+      if (isAbortError(error)) return; // componente desmontado: no actualizar estado
       console.error('Error en chat:', error);
       setMessages((prev) => [
         ...prev,
         { role: 'model', parts: [{ text: 'Error al conectar con el servidor.' }] },
       ]);
     } finally {
+      if (sendAbortRef.current === controller) sendAbortRef.current = null;
       setLoading(false);
     }
   }, [input, loading, userId, token]);

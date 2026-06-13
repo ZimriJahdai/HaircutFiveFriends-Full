@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 const API_BASE = 'http://localhost:3006/HaircutFiveFriends/api/v1';
-const barberApi = axios.create({ baseURL: API_BASE });
+const REQUEST_TIMEOUT_MS = Number(process.env.HTTP_TIMEOUT_MS) || 15000;
+const barberApi = axios.create({ baseURL: API_BASE, timeout: REQUEST_TIMEOUT_MS });
 
 export const executeFunctionCall = async (call, token) => {
   const args = call?.args || {};

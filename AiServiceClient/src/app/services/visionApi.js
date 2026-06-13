@@ -9,6 +9,7 @@ export const recommendHaircuts = async ({
   description,
   length,
   style,
+  signal,
 }) => {
   const response = await fetch(`${VISION_API_URL}/recommend`, {
     method: 'POST',
@@ -24,6 +25,7 @@ export const recommendHaircuts = async ({
       length,
       style,
     }),
+    signal,
   });
 
   if (handleUnauthorized(response)) {

@@ -1,25 +1,12 @@
-import { GoogleGenAI, Modality } from "@google/genai";
+import { Modality } from "@google/genai";
 import fs from "fs/promises";
 import path from "path";
-import "dotenv/config";
+import { getGenAI, MODELS } from "../configs/genai.js";
 
-// -- Configuracion ------------------------------------------------------------
-const GOOGLE_PROJECT_ID = process.env.GOOGLE_CLOUD_PROJECT || process.env.GOOGLE_PROJECT_ID;
-const GOOGLE_VERTEX_LOCATION = process.env.GOOGLE_CLOUD_LOCATION || process.env.GOOGLE_VERTEX_LOCATION || "us-central1";
-
-if (!GOOGLE_PROJECT_ID) {
-  throw new Error("Falta GOOGLE_CLOUD_PROJECT o GOOGLE_PROJECT_ID en el entorno");
-}
-
-const TEXT_MODEL = process.env.VERTEX_TEXT_MODEL || "gemini-3.1-flash-lite-preview";
-const GEMINI_IMAGE_MODEL = process.env.GEMINI_IMAGE_MODEL || "gemini-3-pro-image-preview";
-
-// Inicializar el SDK con Vertex AI y ADC de manera nativa
-const ai = new GoogleGenAI({
-  vertexai: true,
-  project: GOOGLE_PROJECT_ID,
-  location: GOOGLE_VERTEX_LOCATION,
-});
+// Cliente y modelos centralizados en configs/genai.js (singleton + ADC).
+// describeFace usa el modelo de VISION (distinto del chatbot/texto).
+const VISION_MODEL = MODELS.VISION;
+const GEMINI_IMAGE_MODEL = MODELS.IMAGE;
 
 // -- Helpers ------------------------------------------------------------------
 function sanitizeBase64(b64) {
@@ -172,8 +159,8 @@ export async function describeFace({ imageBase64, imagePath, mimeType }) {
   if (!base64) throw new Error("No se proporciono imagen en base64");
 
   const response = await generateWithRetry(async () => {
-    return await ai.models.generateContent({
-      model: TEXT_MODEL,
+    return await getGenAI().models.generateContent({
+      model: VISION_MODEL,
       contents: [
         "Analiza el rostro y responde SOLO con un JSON valido (sin markdown ni texto extra) con estas claves exactas: faceShape, hairTexture, hairColor, facialLines, recommendedHaircutStyle. Cada valor debe ser una frase breve en espanol.",
         { inlineData: { data: base64, mimeType: mime } }
@@ -200,7 +187,7 @@ export async function proposeHaircutImage(
   const editPrompt = buildHaircutPrompt(faceSummary, { haircutName, description, length, style });
 
   const response = await generateWithRetry(async () => {
-    return await ai.models.generateContent({
+    return await getGenAI().models.generateContent({
       model: GEMINI_IMAGE_MODEL,
       contents: [
         { inlineData: { data: base64, mimeType: mime } },

@@ -5,10 +5,11 @@ import { getVoiceMemory } from './voice-memory.js';
 import { executeFunctionCall } from './barber-tools-executor.js';
 import { Chat } from '../chats/chat.model.js';
 import { getUserIdFromToken } from '../../middlewares/validate-JWT.js';
+import { GCP_PROJECT, GCP_LOCATION, MODELS } from '../../configs/genai.js';
 
-// GCP Configs
-const location = process.env.GOOGLE_CLOUD_LOCATION || process.env.GOOGLE_VERTEX_LOCATION || 'us-central1';
-const projectId = process.env.GOOGLE_CLOUD_PROJECT || process.env.GOOGLE_PROJECT_ID;
+// GCP Configs (centralizadas en configs/genai.js)
+const location = GCP_LOCATION;
+const projectId = GCP_PROJECT;
 
 // Inicializador de Google Auth para ADC
 const auth = new GoogleAuth({
@@ -125,7 +126,7 @@ export const setupLiveApi = (wss) => {
             const setupMessage = {
                 setup: {
                     // Nota: Vertex requiere la ruta completa del recurso para el modelo
-                    model: buildVertexModelPath(projectId, location, 'gemini-3.1-flash-live-preview'),
+                    model: buildVertexModelPath(projectId, location, MODELS.LIVE),
                     generationConfig: {
                         responseModalities: ['AUDIO'],
                     },

@@ -20,6 +20,8 @@ const getFaceShapeLabel = (shape) => {
   return FACE_SHAPE_LABELS[key] || shape;
 };
 
+const isAbortError = (error) => error?.name === 'AbortError';
+
 const getHaircutImage = (item) => (
   item?.image ||
   item?.imageUrl ||
@@ -121,6 +123,7 @@ export default function VisionPage() {
   const fileInputRef = useRef(null);
   const streamUrlRef = useRef('');
   const streamWsRef = useRef(null);
+  const analyzeAbortRef = useRef(null);
   const summaryBlocks = buildSummaryBlocks(faceSummary);
 
   useEffect(() => () => {
@@ -128,6 +131,9 @@ export default function VisionPage() {
       URL.revokeObjectURL(previewUrl);
     }
   }, [previewUrl]);
+
+  // Aborta la peticion de analisis en vuelo al desmontar.
+  useEffect(() => () => analyzeAbortRef.current?.abort(), []);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.location.protocol === 'https:' && AR_WS_URL.startsWith('ws://')) {
@@ -222,6 +228,9 @@ export default function VisionPage() {
     setLoading(true);
     setError('');
 
+    const controller = new AbortController();
+    analyzeAbortRef.current = controller;
+
     try {
       const auth = getAuth();
       const data = await recommendHaircuts({
@@ -232,6 +241,7 @@ export default function VisionPage() {
         description: haircutDescription,
         length: hairLength,
         style: hairStyle,
+        signal: controller.signal,
       });
       setFaceShape(data?.faceShape || '');
       setFaceSummary(data?.faceSummary || null);
@@ -244,13 +254,17 @@ export default function VisionPage() {
           imageBase64: haircutBase64,
           mimeType: 'image/png',
           faceSummary: data?.faceSummary || null,
-        }).catch(() => {
+          signal: controller.signal,
+        }).catch((arError) => {
+          if (isAbortError(arError)) return;
           setStreamError('No se pudo enviar el corte al modulo AR.');
         });
       }
     } catch (requestError) {
+      if (isAbortError(requestError)) return; // componente desmontado: no actualizar estado
       setError(requestError.message || 'Error al procesar la imagen.');
     } finally {
+      if (analyzeAbortRef.current === controller) analyzeAbortRef.current = null;
       setLoading(false);
     }
   };
