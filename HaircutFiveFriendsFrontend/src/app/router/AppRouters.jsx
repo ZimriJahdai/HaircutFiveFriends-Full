@@ -10,6 +10,7 @@ import ClientHome from '../pages/ClientHome.jsx';
 import { ProtectedRoute } from './ProtectedRoute.jsx';
 import { RoleGuard } from './RoleGuard.jsx';
 import DashboardLayout from '../../shared/components/layout/DashboardLayout.jsx'; // 👈 agregar
+import { Haircut } from '../../features/haircut/components/Haircut.jsx';
 
 export const AppRoutes = () => {
   return (
@@ -32,6 +33,7 @@ export const AppRoutes = () => {
         }
       >
         <Route index element={<DashboardHome />} />
+        <Route path='haircut' element={<Haircut />} />
         {/* Aquí irán tus páginas admin: citas, clientes, etc. */}
       </Route>
 

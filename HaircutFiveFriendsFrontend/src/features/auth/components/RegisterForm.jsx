@@ -32,7 +32,7 @@ export const RegisterForm = ({ onRegistered }) => {
     const formData = new FormData();
     formData.append('name', values.name);
     formData.append('email', values.email);
-    formData.append('phone', values.phone);
+    formData.append('phone', values.phone.replace(/\D/g, ''));
     formData.append('password', values.password);
     if (values.profilePicture?.[0]) {
       formData.append('profilePicture', values.profilePicture[0]);

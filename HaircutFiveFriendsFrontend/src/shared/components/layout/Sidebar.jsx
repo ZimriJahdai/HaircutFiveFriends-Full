@@ -5,6 +5,7 @@ import { useAuthStore } from '../../../features/auth/store/authStore.js';
 const NAV_CONFIG = {
   ADMIN_ROLE: [
     { label: 'Inicio', icon: 'ti-home', to: '/dashboard' },
+    { label: 'Cortes de cabello', icon: 'ti-scissors', to: '/dashboard/haircut' },
     { label: 'Citas', icon: 'ti-calendar', to: '/dashboard/citas', badge: null },
     { label: 'Clientes', icon: 'ti-users', to: '/dashboard/clientes' },
     { label: 'Barberos', icon: 'ti-id-badge', to: '/dashboard/barberos' },
@@ -22,6 +23,7 @@ const NAV_CONFIG = {
     { label: 'Mi perfil', icon: 'ti-user-circle', to: '/client/perfil' },
     { label: 'Servicios', icon: 'ti-scissors', to: '/client/servicios' },
     { label: 'Notificaciones', icon: 'ti-bell', to: '/client/notificaciones' },
+
   ],
 };
 
@@ -144,8 +146,8 @@ export default function Sidebar({ collapsed, onToggle }) {
 
   const roleLabel =
     role === 'ADMIN_ROLE' ? 'Administrador' :
-    role === 'ADMIN_RESTAURANTE' || role === 'ADMIN_RESTAURANT' ? 'Admin Restaurante' :
-    'Cliente';
+      role === 'ADMIN_RESTAURANTE' || role === 'ADMIN_RESTAURANT' ? 'Admin Restaurante' :
+        'Cliente';
 
   return (
     <aside style={s.sidebar(collapsed)}>
