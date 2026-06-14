@@ -85,7 +85,10 @@ const handleRefreshToken = async function (_error) {
         _isRefreshing = true;
         const refreshToken = useAuthStore.getState().refreshToken;
         if (!refreshToken) {
-            useAuthStore.getState().logout();
+            // No refresh token available — propagate the error to the
+            // calling component so it can display a message instead of
+            // silently logging the user out.
+            _isRefreshing = false;
             return Promise.reject(_error);
         }
         try {

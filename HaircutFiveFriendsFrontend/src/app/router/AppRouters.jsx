@@ -9,9 +9,13 @@ import { ProtectedRoute } from './ProtectedRoute.jsx';
 import { RoleGuard } from './RoleGuard.jsx';
 import DashboardLayout from '../../shared/components/layout/DashboardLayout.jsx';
 import DashboardHome from '../../app/pages/DashboardHome.jsx';
-import { Haircut } from '../../features/haircut/components/Haircut.jsx';
+import { Haircut } from '../../features/haircut/pages/Haircut.jsx';
+import { Barber } from '../../features/barber-admin/pages/Barber.jsx';
+import { Client } from '../../features/client-admin/pages/Client.jsx';
 import { ClientHome } from '../pages/ClientHome.jsx';
 import { Home } from '../../features/client/pages/Home.jsx';
+import { Barberos } from '../../features/barber-client/pages/Barberos.jsx';
+import { Favoritos } from '../../features/favorites/pages/Favoritos.jsx';
 
 export const AppRoutes = () => {
   return (
@@ -35,6 +39,8 @@ export const AppRoutes = () => {
       >
         <Route index element={<DashboardHome />} />
         <Route path='haircut' element={<Haircut />} />
+        <Route path='barberos' element={<Barber />} />
+        <Route path='clientes' element={<Client />} />
         {/* Aquí irán tus páginas admin: citas, clientes, etc. */}
       </Route>
 
@@ -50,18 +56,9 @@ export const AppRoutes = () => {
         }
       >
         <Route index element={<Home />} />
+        <Route path='barberos' element={<Barberos />} />
+        <Route path='favoritos' element={<Favoritos />} />
       </Route>
-
-      <Route
-        path="/admin-restaurante"
-        element={
-          <ProtectedRoute>
-            <RoleGuard allowedRoles={['ADMIN_RESTAURANTE', 'ADMIN_RESTAURANT']}>
-              <AdminRestaurantePage />
-            </RoleGuard>
-          </ProtectedRoute>
-        }
-      />
     </Routes>
   );
 };

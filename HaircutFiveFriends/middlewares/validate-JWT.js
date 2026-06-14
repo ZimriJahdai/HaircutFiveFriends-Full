@@ -90,6 +90,11 @@ export const requireClientFromToken = (req, res, next) => {
 
 export const ensureClientMatchesToken = async (req, res, next) => {
     try {
+        // ADMIN_ROLE can create clients with any email — skip token-match check
+        if (req.userRole === 'ADMIN_ROLE') {
+            return next();
+        }
+
         const tokenEmail = req.auth?.email || req.auth?.Email || req.auth?.User?.Email || req.auth?.user?.Email;
         const tokenPassword = req.auth?.password || req.auth?.Password || req.auth?.User?.Password || req.auth?.user?.Password;
         const tokenProfile = req.auth?.profilePicture || req.auth?.ProfilePicture || req.auth?.Imagen || req.auth?.User?.Imagen || req.auth?.user?.Imagen;

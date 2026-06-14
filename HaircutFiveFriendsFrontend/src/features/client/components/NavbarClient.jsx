@@ -1,11 +1,14 @@
 import { Link, NavLink } from 'react-router-dom';
 import { AvatarUser } from '../../../shared/components/ui/AvatarUser.jsx';
+import { useFavoritesStore } from '../../favorites/store/useFavoritesStore.js';
 
 const CLIENT_MENU_ITEMS = [
   { label: 'Mi Perfil', to: '/client/perfil', icon: 'ti-user-circle' },
 ];
 
 export default function NavbarClient() {
+  const favCount = useFavoritesStore((s) => s.favoriteIds.length);
+
   const navLinkClass = ({ isActive }) =>
     `flex items-center gap-2 px-5 py-3 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-300 ${isActive
       ? 'bg-[#00D2C4]/10 text-[#00D2C4]'
@@ -52,6 +55,16 @@ export default function NavbarClient() {
           <NavLink to="/client/galeria" className={navLinkClass}>
             <i className="ti ti-photo text-base" />
             Estilos
+          </NavLink>
+
+          <NavLink to="/client/favoritos" className={navLinkClass}>
+            <i className="ti ti-heart text-base" />
+            Favoritos
+            {favCount > 0 && (
+              <span className="ml-0.5 flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-[#00D2C4] text-[#0A0A0A] text-[10px] font-black px-1">
+                {favCount > 99 ? '99+' : favCount}
+              </span>
+            )}
           </NavLink>
 
           <NavLink to="/client/reservar" className={navLinkClass}>

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useHaircutStore } from '../store/useHaircutStore';
 import { deleteHaircut } from '../../../shared/api/haircut';
-import { HaircutCard } from './HaircutCard';
-import { HaircutModal } from './HaircutModal';
+import { HaircutCard } from '../components/HaircutCard';
+import { HaircutModal } from '../components/HaircutModal';
 
 export const Haircut = () => {
   const { haircut: haircuts, loading, error: storeError, getHaircut } = useHaircutStore();

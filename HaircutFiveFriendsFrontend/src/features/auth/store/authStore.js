@@ -1,4 +1,4 @@
-﻿import { create } from 'zustand';
+import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { authService } from '../../../shared/api/auth.js';
 
@@ -69,8 +69,9 @@ export const useAuthStore = create(
             user,
             token: response.token,
             expiresAt: response.expiresAt ? new Date(response.expiresAt).toISOString() : null,
-            refreshToken: null,
+            refreshToken: response.refreshToken || null,
             isAuthenticated: true,
+            isLoadingAuth: false,
             loading: false,
             error: null,
           });
@@ -97,7 +98,7 @@ export const useAuthStore = create(
       },
 
       logout: () => {
-        set(initialState);
+        set({ ...initialState, isLoadingAuth: false });
       },
 
       updateUser: (updatedUser) => {
