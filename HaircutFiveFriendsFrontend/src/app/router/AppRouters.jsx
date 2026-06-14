@@ -4,13 +4,14 @@ import { AuthPage } from '../../features/auth/pages/AuthPage.jsx';
 import { VerifyEmailPage } from '../../features/auth/pages/VerifyEmailPage.jsx';
 import { ResetPasswordPage } from '../../features/auth/pages/ResetPasswordPage.jsx';
 import { UnauthorizedPage } from '../../features/auth/pages/UnauthorizedPage.jsx';
-import DashboardHome from '../pages/DashboardHome.jsx';
 import AdminRestaurantePage from '../pages/AdminRestaurantePage.jsx';
-import ClientHome from '../pages/ClientHome.jsx';
 import { ProtectedRoute } from './ProtectedRoute.jsx';
 import { RoleGuard } from './RoleGuard.jsx';
-import DashboardLayout from '../../shared/components/layout/DashboardLayout.jsx'; // 👈 agregar
+import DashboardLayout from '../../shared/components/layout/DashboardLayout.jsx';
+import DashboardHome from '../../app/pages/DashboardHome.jsx';
 import { Haircut } from '../../features/haircut/components/Haircut.jsx';
+import { ClientHome } from '../pages/ClientHome.jsx';
+import { Home } from '../../features/client/pages/Home.jsx';
 
 export const AppRoutes = () => {
   return (
@@ -43,13 +44,12 @@ export const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <RoleGuard allowedRoles={['USER_ROLE']}>
-              <DashboardLayout />
+              <ClientHome />
             </RoleGuard>
           </ProtectedRoute>
         }
       >
-        <Route index element={<ClientHome />} />
-        {/* Aquí irán tus páginas cliente: reservar, citas, perfil, etc. */}
+        <Route index element={<Home />} />
       </Route>
 
       <Route
