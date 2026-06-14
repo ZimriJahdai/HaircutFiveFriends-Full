@@ -1,5 +1,5 @@
 import { Link, NavLink } from 'react-router-dom';
-import { AvatarUser } from '../../../shared/components/AvatarUser.jsx';
+import { AvatarUser } from '../../../shared/components/ui/AvatarUser.jsx';
 
 const CLIENT_MENU_ITEMS = [
   { label: 'Mi Perfil', to: '/client/perfil', icon: 'ti-user-circle' },
