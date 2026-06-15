@@ -7,11 +7,13 @@ const ACTIONS_CONFIG = {
   ADMIN_ROLE: [
     { label: 'Ver todas las citas', icon: 'ti-calendar-event', to: '/dashboard/citas' },
     { label: 'Gestionar barberos', icon: 'ti-id-badge', to: '/dashboard/barberos' },
+    { label: 'Productos', icon: 'ti-package', to: '/dashboard/productos' },
     { label: 'Clientes', icon: 'ti-users', to: '/dashboard/clientes' },
     { label: 'Reportes', icon: 'ti-chart-bar', to: '/dashboard/reportes' },
   ],
   USER_ROLE: [
     { label: 'Reservar cita', icon: 'ti-calendar-plus', to: '/client/reservar' },
+    { label: 'Productos', icon: 'ti-package', to: '/client/productos' },
     { label: 'Mis citas', icon: 'ti-list', to: '/client/citas' },
     { label: 'Mi perfil', icon: 'ti-user-circle', to: '/client/perfil' },
     { label: 'Servicios', icon: 'ti-scissors', to: '/client/servicios' },

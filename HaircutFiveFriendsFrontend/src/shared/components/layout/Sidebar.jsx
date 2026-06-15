@@ -6,6 +6,7 @@ const NAV_CONFIG = {
   ADMIN_ROLE: [
     { label: 'Inicio', icon: 'ti-home', to: '/dashboard' },
     { label: 'Cortes de cabello', icon: 'ti-scissors', to: '/dashboard/haircut' },
+    { label: 'Productos', icon: 'ti-package', to: '/dashboard/productos' },
     { label: 'Citas', icon: 'ti-calendar', to: '/dashboard/citas', badge: null },
     { label: 'Clientes', icon: 'ti-users', to: '/dashboard/clientes' },
     { label: 'Barberos', icon: 'ti-id-badge', to: '/dashboard/barberos' },
@@ -18,6 +19,7 @@ const NAV_CONFIG = {
   USER_ROLE: [
     { label: 'Inicio', icon: 'ti-home', to: '/client' },
     { label: 'Reservar cita', icon: 'ti-calendar-plus', to: '/client/reservar', badge: 'Nuevo' },
+    { label: 'Productos', icon: 'ti-package', to: '/client/productos' },
     { label: 'Mis citas', icon: 'ti-calendar', to: '/client/citas' },
     { type: 'section', label: 'Cuenta' },
     { label: 'Mi perfil', icon: 'ti-user-circle', to: '/client/perfil' },
@@ -132,7 +134,7 @@ function NavItem({ item, collapsed }) {
   );
 }
 
-export default function Sidebar({ collapsed, onToggle }) {
+export default function Sidebar({ collapsed }) {
   const user = useAuthStore((state) => state.user);
   const [userHovered, setUserHovered] = useState(false);
   const navigate = useNavigate();
