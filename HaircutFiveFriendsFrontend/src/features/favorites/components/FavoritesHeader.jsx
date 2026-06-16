@@ -5,7 +5,7 @@ export const FavoritesHeader = ({ showClear, onClear }) => (
         Mis Favoritos
       </h1>
       <p className="text-[#5A5A5A] text-[14px]">
-        Tus barberos guardados para acceder rápido.
+        Tus barberos, productos, servicios y cortes de cabello preferidos.
       </p>
     </div>
 

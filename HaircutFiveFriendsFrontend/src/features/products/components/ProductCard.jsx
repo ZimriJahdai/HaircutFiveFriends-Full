@@ -1,3 +1,5 @@
+import { FavoriteButton } from '../../favorites/components/FavoriteButton.jsx';
+
 const CATEGORY_LABELS = {
   SHAMPOO: 'Shampoo',
   WAX: 'Cera',
@@ -23,6 +25,13 @@ export const ProductCard = ({ product, mode = 'client', onEdit, onDelete }) => {
   return (
     <div className="relative rounded-2xl border border-[#2A2A2A] bg-[#111] overflow-hidden shadow-[0_0_0_1px_rgba(201,168,76,0.08)] transition-transform hover:-translate-y-0.5">
       <div className="relative h-48 bg-[#181818] overflow-hidden">
+        {mode === 'client' && (
+          <FavoriteButton
+            id={product._id || product.id}
+            typeFavorite="PRODUCT"
+            className="absolute top-3 right-3 z-10"
+          />
+        )}
         {product.image ? (
           <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
         ) : (

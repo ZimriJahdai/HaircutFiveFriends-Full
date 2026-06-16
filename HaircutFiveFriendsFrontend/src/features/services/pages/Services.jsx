@@ -3,6 +3,7 @@ import { useAuthStore } from '../../auth/store/authStore.js';
 import { useServiceStore } from '../store/useServiceStore.js';
 import { deleteService } from '../../../shared/api/service.js';
 import { ServiceModal } from '../components/ServiceModal.jsx';
+import { FavoriteButton } from '../../favorites/components/FavoriteButton.jsx';
 
 // ─── Constantes compartidas ───────────────────────────────────────────────────
 
@@ -211,6 +212,7 @@ const ClientView = ({ services, loading }) => {
                   <div style={{ color: '#E8E4DC', fontWeight: 500, fontSize: '14px' }}>{s.name}</div>
                   <div style={{ color: '#555', fontSize: '11px', marginTop: '2px' }}>{CATEGORY_LABELS[s.category] || s.category}</div>
                 </div>
+                <FavoriteButton id={s._id || s.id} typeFavorite="SERVICE" className="flex-shrink-0" />
               </div>
               <p style={{ color: '#777', fontSize: '12px', margin: 0, lineHeight: 1.6 }}>{s.description}</p>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #222', paddingTop: '10px', marginTop: '2px' }}>
