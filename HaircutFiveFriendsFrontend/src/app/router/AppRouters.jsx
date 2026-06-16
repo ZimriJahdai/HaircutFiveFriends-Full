@@ -14,6 +14,8 @@ import { ClientHome } from '../pages/ClientHome.jsx';
 import { Home } from '../../features/client/pages/Home.jsx';
 import { Barberos } from '../../features/barber-client/pages/Barberos.jsx';
 import { Favoritos } from '../../features/favorites/pages/Favoritos.jsx';
+import { Perfil } from '../../features/client/pages/Perfil.jsx';
+
 
 // Componentes unificados (admin + cliente en uno solo)
 import { Services } from '../../features/services/pages/Services.jsx';
@@ -63,6 +65,8 @@ export const AppRoutes = () => {
         <Route path="servicios" element={<Services />} />   {/* ← unificado */}
         <Route path="resenas" element={<Reviews />} />       {/* ← unificado */}
         <Route path="favoritos" element={<Favoritos />} />
+        <Route path="perfil" element={<Perfil />} />
+
       </Route>
     </Routes>
   );
