@@ -1,6 +1,6 @@
 import { axiosAdmin } from './api.js';
 
-const BASE = '/services';
+const BASE = '/service';
 
 export const getAllServices     = ()            => axiosAdmin.get(`${BASE}/obtener`).then(r => r.data);
 export const getServiceById     = (id)          => axiosAdmin.get(`${BASE}/obtener/${id}`).then(r => r.data);
