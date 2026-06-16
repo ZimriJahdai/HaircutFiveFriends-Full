@@ -12,7 +12,8 @@ const NAV_CONFIG = {
     { label: 'Barberos', icon: 'ti-id-badge', to: '/dashboard/barberos' },
     { label: 'Reportes', icon: 'ti-chart-bar', to: '/dashboard/reportes' },
     { type: 'section', label: 'Servicios' },
-    { label: 'Catálogo', icon: 'ti-list', to: '/dashboard/catalogo' },
+    { label: 'Servicios', icon: 'ti-scissors', to: '/dashboard/servicios' },
+    { label: 'Reseñas', icon: 'ti-star', to: '/dashboard/resenas' },
     { type: 'section', label: 'Sistema' },
     { label: 'Configuración', icon: 'ti-settings', to: '/dashboard/configuracion' },
   ],
@@ -24,8 +25,8 @@ const NAV_CONFIG = {
     { type: 'section', label: 'Cuenta' },
     { label: 'Mi perfil', icon: 'ti-user-circle', to: '/client/perfil' },
     { label: 'Servicios', icon: 'ti-scissors', to: '/client/servicios' },
+    { label: 'Reseñas', icon: 'ti-star', to: '/client/resenas' },
     { label: 'Notificaciones', icon: 'ti-bell', to: '/client/notificaciones' },
-
   ],
 };
 
@@ -84,7 +85,7 @@ const s = {
     whiteSpace: 'nowrap', marginBottom: '2px',
     overflow: 'hidden', textDecoration: 'none',
     background: active ? '#C9A84C18' : hovered ? '#1A1A1A' : 'transparent',
-    color: active ? '#C9A84C' : hovered ? '#AAA' : '#555',
+    color: active ? '#FFFFFF' : hovered ? '#E8E4DC' : '#666',
     transition: 'background 0.15s, color 0.15s',
   }),
   itemIcon: { fontSize: '18px', flexShrink: 0 },
