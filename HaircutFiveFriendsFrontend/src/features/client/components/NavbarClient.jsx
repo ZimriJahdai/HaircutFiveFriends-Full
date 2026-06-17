@@ -52,6 +52,11 @@ export default function NavbarClient() {
             Barberos
           </NavLink>
 
+          <NavLink to="/client/productos" className={navLinkClass}>
+            <i className="ti ti-package text-base" />
+            Productos
+          </NavLink>
+
           <NavLink to="/client/galeria" className={navLinkClass}>
             <i className="ti ti-photo text-base" />
             Estilos

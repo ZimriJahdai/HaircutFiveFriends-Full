@@ -1,10 +1,8 @@
-import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AuthPage } from '../../features/auth/pages/AuthPage.jsx';
 import { VerifyEmailPage } from '../../features/auth/pages/VerifyEmailPage.jsx';
 import { ResetPasswordPage } from '../../features/auth/pages/ResetPasswordPage.jsx';
 import { UnauthorizedPage } from '../../features/auth/pages/UnauthorizedPage.jsx';
-import AdminRestaurantePage from '../pages/AdminRestaurantePage.jsx';
 import { ProtectedRoute } from './ProtectedRoute.jsx';
 import { RoleGuard } from './RoleGuard.jsx';
 import DashboardLayout from '../../shared/components/layout/DashboardLayout.jsx';
@@ -16,6 +14,12 @@ import { ClientHome } from '../pages/ClientHome.jsx';
 import { Home } from '../../features/client/pages/Home.jsx';
 import { Barberos } from '../../features/barber-client/pages/Barberos.jsx';
 import { Favoritos } from '../../features/favorites/pages/Favoritos.jsx';
+import { ProductsAdmin } from '../../features/products/pages/ProductsAdmin.jsx';
+import { ProductsClient } from '../../features/products/pages/ProductsClient.jsx';
+
+// Componentes unificados (admin + cliente en uno solo)
+import { Services } from '../../features/services/pages/Services.jsx';
+import { Reviews } from '../../features/reviews/pages/Reviews.jsx';
 
 export const AppRoutes = () => {
   return (
@@ -38,10 +42,12 @@ export const AppRoutes = () => {
         }
       >
         <Route index element={<DashboardHome />} />
-        <Route path='haircut' element={<Haircut />} />
-        <Route path='barberos' element={<Barber />} />
-        <Route path='clientes' element={<Client />} />
-        {/* Aquí irán tus páginas admin: citas, clientes, etc. */}
+        <Route path="haircut" element={<Haircut />} />
+        <Route path="barberos" element={<Barber />} />
+        <Route path="servicios" element={<Services />} />   {/* ← unificado */}
+        <Route path="productos" element={<ProductsAdmin />} />
+        <Route path="resenas" element={<Reviews />} />       {/* ← unificado */}
+        <Route path="clientes" element={<Client />} />
       </Route>
 
       {/* Rutas cliente */}
@@ -56,8 +62,11 @@ export const AppRoutes = () => {
         }
       >
         <Route index element={<Home />} />
-        <Route path='barberos' element={<Barberos />} />
-        <Route path='favoritos' element={<Favoritos />} />
+        <Route path="barberos" element={<Barberos />} />
+        <Route path="servicios" element={<Services />} />   {/* ← unificado */}
+        <Route path="productos" element={<ProductsClient />} />
+        <Route path="resenas" element={<Reviews />} />       {/* ← unificado */}
+        <Route path="favoritos" element={<Favoritos />} />
       </Route>
     </Routes>
   );

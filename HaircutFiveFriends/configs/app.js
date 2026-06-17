@@ -6,6 +6,7 @@ import morgan from 'morgan';
 import multer from 'multer';
 import swaggerUi from 'swagger-ui-express';
 import { dbConnection } from './db.js';
+import { seedDatabase } from './seeder.js';
 import { corsOptions } from './cors-configuration.js';
 import { helmetConfiguration } from './helmet-configuration.js';
 import { swaggerSpec } from './swagger.js';
@@ -79,6 +80,7 @@ export const initServer = async () => {
 
     try {
         await dbConnection();
+        await seedDatabase();
         middlewares(app);
         routes(app);
 

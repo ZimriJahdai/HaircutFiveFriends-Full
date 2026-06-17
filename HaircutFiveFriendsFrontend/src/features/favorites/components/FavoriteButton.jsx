@@ -1,19 +1,19 @@
 import { useFavorites } from '../hooks/useFavorites';
 
 /**
- * FavoriteButton — botón de corazón que alterna el favorito de un barbero.
- * Visualmente prominente: fondo semiopaco siempre visible, animación de escala al activar.
+ * FavoriteButton — botón de corazón que alterna el favorito de cualquier entidad.
+ * Soporta typeFavorite: "BARBER" | "PRODUCT" | "SERVICE" | "HAIRCUT"
  */
-export const FavoriteButton = ({ id, className = '' }) => {
+export const FavoriteButton = ({ id, typeFavorite = 'BARBER', className = '' }) => {
   const { isFavorite, toggleFavorite } = useFavorites();
-  const active = isFavorite(id);
+  const active = isFavorite(typeFavorite, id);
 
   return (
     <button
       type="button"
       onClick={(e) => {
         e.stopPropagation();
-        toggleFavorite(id);
+        toggleFavorite(typeFavorite, id);
       }}
       aria-label={active ? 'Quitar de favoritos' : 'Agregar a favoritos'}
       className={[

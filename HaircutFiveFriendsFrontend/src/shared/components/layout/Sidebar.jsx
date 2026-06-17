@@ -4,26 +4,27 @@ import { useAuthStore } from '../../../features/auth/store/authStore.js';
 
 const NAV_CONFIG = {
   ADMIN_ROLE: [
-    { label: 'Inicio', icon: 'ti-home', to: '/dashboard' },
-    { label: 'Cortes de cabello', icon: 'ti-scissors', to: '/dashboard/haircut' },
-    { label: 'Citas', icon: 'ti-calendar', to: '/dashboard/citas', badge: null },
-    { label: 'Clientes', icon: 'ti-users', to: '/dashboard/clientes' },
-    { label: 'Barberos', icon: 'ti-id-badge', to: '/dashboard/barberos' },
-    { label: 'Reportes', icon: 'ti-chart-bar', to: '/dashboard/reportes' },
+    { label: 'Inicio',             icon: 'ti-home',       to: '/dashboard' },
+    { label: 'Cortes de cabello',  icon: 'ti-scissors',   to: '/dashboard/haircut' },
+    { label: 'Productos',          icon: 'ti-package',    to: '/dashboard/productos' },
+    { label: 'Citas',              icon: 'ti-calendar',   to: '/dashboard/citas' },
+    { label: 'Clientes',           icon: 'ti-users',      to: '/dashboard/clientes' },
+    { label: 'Barberos',           icon: 'ti-id-badge',   to: '/dashboard/barberos' },
+    { label: 'Reportes',           icon: 'ti-chart-bar',  to: '/dashboard/reportes' },
     { type: 'section', label: 'Servicios' },
-    { label: 'Catálogo', icon: 'ti-list', to: '/dashboard/catalogo' },
-    { type: 'section', label: 'Sistema' },
-    { label: 'Configuración', icon: 'ti-settings', to: '/dashboard/configuracion' },
+    { label: 'Servicios',          icon: 'ti-scissors',   to: '/dashboard/servicios' },
+    { label: 'Reseñas',            icon: 'ti-star',       to: '/dashboard/resenas' },
   ],
   USER_ROLE: [
-    { label: 'Inicio', icon: 'ti-home', to: '/client' },
-    { label: 'Reservar cita', icon: 'ti-calendar-plus', to: '/client/reservar', badge: 'Nuevo' },
-    { label: 'Mis citas', icon: 'ti-calendar', to: '/client/citas' },
+    { label: 'Inicio',             icon: 'ti-home',           to: '/client' },
+    { label: 'Reservar cita',      icon: 'ti-calendar-plus',  to: '/client/reservar', badge: 'Nuevo' },
+    { label: 'Productos',          icon: 'ti-package',        to: '/client/productos' },
+    { label: 'Mis citas',          icon: 'ti-calendar',       to: '/client/citas' },
     { type: 'section', label: 'Cuenta' },
-    { label: 'Mi perfil', icon: 'ti-user-circle', to: '/client/perfil' },
-    { label: 'Servicios', icon: 'ti-scissors', to: '/client/servicios' },
-    { label: 'Notificaciones', icon: 'ti-bell', to: '/client/notificaciones' },
-
+    { label: 'Mi perfil',          icon: 'ti-user-circle',    to: '/client/perfil' },
+    { label: 'Servicios',          icon: 'ti-scissors',       to: '/client/servicios' },
+    { label: 'Reseñas',            icon: 'ti-star',           to: '/client/resenas' },
+    { label: 'Notificaciones',     icon: 'ti-bell',           to: '/client/notificaciones' },
   ],
 };
 
@@ -41,82 +42,56 @@ const s = {
     fontFamily: "'Inter', sans-serif",
   }),
   brand: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    padding: '18px 14px',
-    borderBottom: '1px solid #1E1E1E',
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
+    display: 'flex', alignItems: 'center', gap: '10px',
+    padding: '18px 14px', borderBottom: '1px solid #1E1E1E',
+    whiteSpace: 'nowrap', overflow: 'hidden',
   },
   logo: {
-    width: '32px', height: '32px',
-    background: '#C9A84C', borderRadius: '6px',
+    width: '32px', height: '32px', background: '#C9A84C', borderRadius: '6px',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     fontSize: '16px', color: '#0A0A0A', flexShrink: 0,
   },
   brandName: {
-    fontFamily: "'Bebas Neue', sans-serif",
-    fontSize: '18px', letterSpacing: '2px',
-    color: '#E8E4DC', lineHeight: 1,
+    fontFamily: "'Bebas Neue', sans-serif", fontSize: '18px',
+    letterSpacing: '2px', color: '#E8E4DC', lineHeight: 1,
   },
-  brandSub: {
-    fontSize: '10px', color: '#444',
-    letterSpacing: '1px', textTransform: 'uppercase',
-  },
+  brandSub: { fontSize: '10px', color: '#444', letterSpacing: '1px', textTransform: 'uppercase' },
   sectionLabel: (collapsed) => ({
-    padding: '10px 14px 4px',
-    fontSize: '9px', letterSpacing: '2px',
-    textTransform: 'uppercase', color: '#333',
-    whiteSpace: 'nowrap',
-    opacity: collapsed ? 0 : 1,
-    transition: 'opacity 0.2s',
+    padding: '10px 14px 4px', fontSize: '9px', letterSpacing: '2px',
+    textTransform: 'uppercase', color: '#333', whiteSpace: 'nowrap',
+    opacity: collapsed ? 0 : 1, transition: 'opacity 0.2s',
   }),
-  nav: {
-    flex: 1, padding: '6px 8px', overflow: 'hidden',
-  },
+  nav: { flex: 1, padding: '6px 8px', overflow: 'hidden' },
   item: (active, hovered) => ({
     display: 'flex', alignItems: 'center', gap: '10px',
-    padding: '9px 10px', borderRadius: '6px',
-    cursor: 'pointer', fontSize: '13px',
-    whiteSpace: 'nowrap', marginBottom: '2px',
+    padding: '9px 10px', borderRadius: '6px', cursor: 'pointer',
+    fontSize: '13px', whiteSpace: 'nowrap', marginBottom: '2px',
     overflow: 'hidden', textDecoration: 'none',
     background: active ? '#C9A84C18' : hovered ? '#1A1A1A' : 'transparent',
-    color: active ? '#C9A84C' : hovered ? '#AAA' : '#555',
+    color: active ? '#FFFFFF' : hovered ? '#E8E4DC' : '#666',
     transition: 'background 0.15s, color 0.15s',
   }),
   itemIcon: { fontSize: '18px', flexShrink: 0 },
   itemLabel: (collapsed) => ({ display: collapsed ? 'none' : 'block' }),
   badge: (collapsed) => ({
-    display: collapsed ? 'none' : 'block',
-    marginLeft: 'auto',
-    background: '#C9A84C', color: '#0A0A0A',
-    fontSize: '10px', fontWeight: 500,
-    padding: '1px 6px', borderRadius: '10px', flexShrink: 0,
+    display: collapsed ? 'none' : 'block', marginLeft: 'auto',
+    background: '#C9A84C', color: '#0A0A0A', fontSize: '10px',
+    fontWeight: 500, padding: '1px 6px', borderRadius: '10px', flexShrink: 0,
   }),
-  foot: {
-    borderTop: '1px solid #1E1E1E', padding: '12px 8px',
-  },
-  userRow: (hovered) => ({
+  foot: { borderTop: '1px solid #1E1E1E', padding: '10px 8px' },
+  logoutBtn: (hovered, collapsed) => ({
     display: 'flex', alignItems: 'center', gap: '10px',
-    padding: '8px 10px', borderRadius: '6px',
-    cursor: 'pointer', overflow: 'hidden', whiteSpace: 'nowrap',
-    background: hovered ? '#1A1A1A' : 'transparent',
-    transition: 'background 0.15s',
+    padding: '9px 10px', borderRadius: '6px', cursor: 'pointer',
+    border: 'none', width: '100%', whiteSpace: 'nowrap', overflow: 'hidden',
+    background: hovered ? '#2A1515' : 'transparent',
+    color: hovered ? '#E87878' : '#555',
+    transition: 'background 0.15s, color 0.15s', fontSize: '13px',
+    fontFamily: "'Inter', sans-serif",
   }),
-  avatar: {
-    width: '30px', height: '30px', borderRadius: '50%',
-    background: '#C9A84C22', border: '1px solid #C9A84C44',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: '11px', fontWeight: 500, color: '#C9A84C', flexShrink: 0,
-  },
-  uname: { fontSize: '12px', color: '#AAA', fontWeight: 500 },
-  urole: { fontSize: '10px', color: '#444' },
 };
 
 function NavItem({ item, collapsed }) {
   const [hovered, setHovered] = useState(false);
-
   return (
     <NavLink
       to={item.to}
@@ -132,34 +107,26 @@ function NavItem({ item, collapsed }) {
   );
 }
 
-export default function Sidebar({ collapsed, onToggle }) {
-  const user = useAuthStore((state) => state.user);
-  const [userHovered, setUserHovered] = useState(false);
+export default function Sidebar({ collapsed }) {
+  const user    = useAuthStore((state) => state.user);
+  const logout  = useAuthStore((state) => state.logout);
   const navigate = useNavigate();
+  const [logoutHovered, setLogoutHovered] = useState(false);
 
-  const role = user?.role || 'USER_ROLE';
+  const role     = user?.role || 'USER_ROLE';
   const navItems = NAV_CONFIG[role] || NAV_CONFIG.USER_ROLE;
 
-  const initials = user?.name
-    ? user.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()
-    : 'U';
-
-  const roleLabel =
-    role === 'ADMIN_ROLE' ? 'Administrador' :
-      role === 'ADMIN_RESTAURANTE' || role === 'ADMIN_RESTAURANT' ? 'Admin Restaurante' :
-        'Cliente';
+  const handleLogout = () => {
+    logout();
+    navigate('/auth', { replace: true });
+  };
 
   return (
     <aside style={s.sidebar(collapsed)}>
-      <link
-        href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500&display=swap"
-        rel="stylesheet"
-      />
-      <link
-        rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"
-      />
+      <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
 
+      {/* Brand */}
       <div style={s.brand}>
         <div style={s.logo}>
           <i className="ti ti-scissors" aria-hidden="true" />
@@ -170,6 +137,7 @@ export default function Sidebar({ collapsed, onToggle }) {
         </div>
       </div>
 
+      {/* Nav items */}
       <nav style={s.nav}>
         {navItems.map((item, i) =>
           item.type === 'section' ? (
@@ -180,27 +148,19 @@ export default function Sidebar({ collapsed, onToggle }) {
         )}
       </nav>
 
+      {/* Footer: solo botón de cerrar sesión */}
       <div style={s.foot}>
-        <div
-          style={s.userRow(userHovered)}
-          onMouseEnter={() => setUserHovered(true)}
-          onMouseLeave={() => setUserHovered(false)}
-          onClick={() => navigate(role === 'ADMIN_ROLE' ? '/dashboard/configuracion' : '/client/perfil')}
+        <button
+          style={s.logoutBtn(logoutHovered, collapsed)}
+          onMouseEnter={() => setLogoutHovered(true)}
+          onMouseLeave={() => setLogoutHovered(false)}
+          onClick={handleLogout}
+          title="Cerrar sesión"
+          aria-label="Cerrar sesión"
         >
-          <div style={s.avatar}>
-            {user?.profilePicture ? (
-              <img
-                src={user.profilePicture}
-                alt="Foto de perfil"
-                style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
-              />
-            ) : initials}
-          </div>
-          <div>
-            <div style={s.uname}>{user?.name || 'Usuario'}</div>
-            <div style={s.urole}>{roleLabel}</div>
-          </div>
-        </div>
+          <i className="ti ti-logout" style={{ fontSize: '18px', flexShrink: 0 }} aria-hidden="true" />
+          <span style={s.itemLabel(collapsed)}>Cerrar sesión</span>
+        </button>
       </div>
     </aside>
   );
