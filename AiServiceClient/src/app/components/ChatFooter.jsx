@@ -1,8 +1,8 @@
 export default function ChatFooter({ userId }) {
   return (
-    <div className="mt-2.5 text-center text-xs text-[var(--muted)]">
+    <div className="mt-2.5 text-center text-xs text-muted">
       {userId ? (
-        <>Conectado como: <strong className="text-[var(--ink)]">{userId}</strong></>
+        <>Conectado como: <strong className="text-ink">{userId}</strong></>
       ) : (
         <>Sin sesion iniciada</>
       )}

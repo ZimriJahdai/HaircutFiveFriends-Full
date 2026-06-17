@@ -17,7 +17,7 @@ AiServiceClient/
 ├── vite.config.js               # Plugin de React 19 y Tailwind v4
 └── src/
     ├── app/
-    │   ├── components/          # Botones de voz interactiva, burbujas de chat
+    │   ├── components/          # Voz interactiva, burbujas de chat, SidebarNav, UserMenu (logout)
     │   ├── constants/           # Direcciones de endpoints y configuraciones de audio
     │   ├── hooks/               # useChat (gestión de estado de chatbot), useLiveAudio
     │   ├── layouts/             # Contenedor visual de las páginas de IA
@@ -30,8 +30,13 @@ AiServiceClient/
     │   └── main.jsx             # Renderizado del virtual DOM
     ├── assets/                  # Ilustraciones animadas e iconos vectoriales SVG
     └── styles/
-        └── index.css            # Hoja de estilos con variables de UI/UX Pro Max
+        └── index.css            # Design system: tokens @theme (Tailwind v4) + Bento + dark gold
 ```
+
+> Design system (ver [[2026-06-16-aiserviceclient-rediseno-bento-aurora]]): tokens en
+> `@theme` → utilidades `bg-accent`/`text-ink`/`font-display`...; `:root` como alias.
+> Paleta dark gold (tipo Haircut), Bento Grid asimétrico, fondo dot-grid estático,
+> fuentes Syne + Space Grotesk + IBM Plex Mono. Shell de altura fija (solo `ChatWindow` scrollea).
 
 ---
 

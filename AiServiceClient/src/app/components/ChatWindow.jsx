@@ -56,10 +56,10 @@ export default function ChatWindow({ messages, loading }) {
   return (
     <div
       ref={containerRef}
-      className="my-5 h-[clamp(420px,calc(100dvh-340px),880px)] overflow-y-auto scroll-smooth rounded-2xl border border-[var(--border)] bg-white/80 p-4 shadow-[inset_0_2px_8px_rgba(20,20,25,0.06)]"
+      className="my-5 min-h-[420px] flex-1 overflow-y-auto scroll-smooth rounded-2xl border border-line bg-black/30 p-4 shadow-[inset_0_2px_12px_rgba(0,0,0,0.4)]"
     >
       {textMessages.length === 0 && (
-        <p className="grid h-full place-items-center text-center text-[var(--muted)]">
+        <p className="grid h-full place-items-center text-center text-muted">
           No hay mensajes. Inicia una conversacion.
         </p>
       )}
@@ -74,7 +74,7 @@ export default function ChatWindow({ messages, loading }) {
           <Fragment key={idx}>
             {badgeText && (
               <div className="my-3 flex justify-center">
-                <span className="rounded-full bg-[rgba(27,27,31,0.06)] px-3 py-1 text-[0.7rem] font-medium text-[var(--muted)]">
+                <span className="rounded-full bg-white/5 border border-line px-3 py-1 text-[0.7rem] font-medium text-muted">
                   {badgeText}
                 </span>
               </div>
@@ -85,13 +85,13 @@ export default function ChatWindow({ messages, loading }) {
                 className={[
                   'max-w-[80%] rounded-2xl px-4 py-2.5 shadow-sm',
                   isUser
-                    ? 'bg-[var(--accent)] text-white rounded-br-sm'
-                    : 'bg-[rgba(27,27,31,0.05)] text-[var(--ink)] rounded-bl-sm',
+                    ? 'bg-accent text-[#0a0a0a] rounded-br-sm'
+                    : 'bg-white/5 border border-line text-ink rounded-bl-sm',
                 ].join(' ')}
               >
                 <strong
                   className={`mb-1 block text-[0.7rem] font-semibold uppercase tracking-[0.08em] ${
-                    isUser ? 'text-white/80' : 'text-[var(--muted)]'
+                    isUser ? 'text-black/60' : 'text-muted'
                   }`}
                 >
                   {isUser ? 'Tu' : 'Gemini'}
@@ -107,10 +107,10 @@ export default function ChatWindow({ messages, loading }) {
 
       {loading && (
         <div className="mb-4 flex items-start" aria-live="polite" aria-label="Gemini esta escribiendo">
-          <div className="flex items-center gap-1.5 rounded-2xl rounded-bl-sm bg-[rgba(27,27,31,0.05)] px-4 py-3">
-            <span className="h-2 w-2 animate-bounce rounded-full bg-[var(--muted)] [animation-delay:-0.3s] motion-reduce:animate-none" />
-            <span className="h-2 w-2 animate-bounce rounded-full bg-[var(--muted)] [animation-delay:-0.15s] motion-reduce:animate-none" />
-            <span className="h-2 w-2 animate-bounce rounded-full bg-[var(--muted)] motion-reduce:animate-none" />
+          <div className="flex items-center gap-1.5 rounded-2xl rounded-bl-sm bg-white/5 border border-line px-4 py-3">
+            <span className="h-2 w-2 animate-bounce rounded-full bg-muted [animation-delay:-0.3s] motion-reduce:animate-none" />
+            <span className="h-2 w-2 animate-bounce rounded-full bg-muted [animation-delay:-0.15s] motion-reduce:animate-none" />
+            <span className="h-2 w-2 animate-bounce rounded-full bg-muted motion-reduce:animate-none" />
           </div>
         </div>
       )}

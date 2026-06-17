@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import SidebarNav from '../components/SidebarNav.jsx';
+import UserMenu from '../components/UserMenu.jsx';
 
 export default function AppShell() {
   return (
@@ -29,7 +30,7 @@ export default function AppShell() {
           </div>
           <div className="topbar-actions">
             <button className="ghost-button" type="button">Nueva sesion</button>
-            <div className="avatar">AG</div>
+            <UserMenu />
           </div>
         </header>
 
