@@ -81,25 +81,6 @@ const getSampleRateFromMime = (mimeType) => {
   return OUTPUT_SAMPLE_RATE;
 };
 
-const extractText = (message) => {
-  const modelParts = message?.serverContent?.modelTurn?.parts || [];
-  const modelText = modelParts
-    .map((part) => part.text)
-    .filter(Boolean)
-    .join(' ')
-    .trim();
-
-  if (modelText) return { role: 'model', text: modelText };
-
-  const inputText = message?.serverContent?.inputTranscription?.text;
-  if (inputText) return { role: 'user', text: inputText };
-
-  const outputText = message?.serverContent?.outputTranscription?.text;
-  if (outputText) return { role: 'model', text: outputText };
-
-  return null;
-};
-
 export const useVoiceSession = () => {
   const [status, setStatus] = useState('idle');
   const [activity, setActivity] = useState('idle');
@@ -114,8 +95,42 @@ export const useVoiceSession = () => {
   const pendingStartRef = useRef(false);
   const readyRef = useRef(false);
 
+  // Acumuladores de transcripcion del turno en curso. El Live envia la
+  // transcripcion en fragmentos efimeros; en vez de empujar un log por
+  // fragmento (que se corta/encabalga), acumulamos el texto y actualizamos
+  // UNA sola entrada por turno hasta recibir turnComplete.
+  const logIdRef = useRef(0);
+  const liveUserIdRef = useRef(null);
+  const liveModelIdRef = useRef(null);
+  const userTurnRef = useRef('');
+  const modelTurnRef = useRef('');
+
   const appendLog = useCallback((entry) => {
     setLogs((prev) => [...prev, entry].slice(-MAX_LOGS));
+  }, []);
+
+  // Inserta o actualiza la entrada "viva" del turno (por id estable). Si aun no
+  // existe, la crea; si existe, reemplaza su texto con el acumulado completo.
+  const upsertLiveLog = useCallback((role, fullText, idRef) => {
+    setLogs((prev) => {
+      if (idRef.current != null) {
+        return prev.map((entry) =>
+          entry.id === idRef.current ? { ...entry, text: fullText } : entry
+        );
+      }
+      const id = (logIdRef.current += 1);
+      idRef.current = id;
+      return [...prev, { id, role, text: fullText }].slice(-MAX_LOGS);
+    });
+  }, []);
+
+  // Cierra el turno: el texto acumulado queda fijo y el proximo turno crea
+  // entradas nuevas.
+  const finalizeTranscriptTurn = useCallback(() => {
+    liveUserIdRef.current = null;
+    liveModelIdRef.current = null;
+    userTurnRef.current = '';
+    modelTurnRef.current = '';
   }, []);
 
   const cleanupAudio = useCallback(() => {
@@ -130,15 +145,20 @@ export const useVoiceSession = () => {
       audioContextRef.current = null;
     }
 
+    // NOTA: el AudioContext de salida NO se cierra aqui. El modelo suele
+    // responder despues de soltar el microfono (stopRecording), y cerrarlo
+    // dejaria sin reproducir esa respuesta. Se cierra en closeOutput().
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+  }, []);
+
+  const closeOutput = useCallback(() => {
     if (outputAudioRef.current) {
       outputAudioRef.current.close();
       outputAudioRef.current = null;
       playbackTimeRef.current = 0;
-    }
-
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
     }
   }, []);
 
@@ -200,6 +220,16 @@ export const useVoiceSession = () => {
       await audioContext.resume();
       audioContextRef.current = audioContext;
 
+      // Crear y reanudar el AudioContext de salida AQUI (dentro del gesto del
+      // usuario) para que la politica de autoplay no bloquee la reproduccion
+      // del audio del modelo. Si se crea perezosamente en onmessage nace
+      // suspended y resume() queda bloqueado -> no se escucha al modelo.
+      if (!outputAudioRef.current) {
+        outputAudioRef.current = new AudioContext({ sampleRate: OUTPUT_SAMPLE_RATE });
+        playbackTimeRef.current = outputAudioRef.current.currentTime;
+      }
+      await outputAudioRef.current.resume();
+
       await audioContext.audioWorklet.addModule(
         new URL('../worklets/pcm-worklet.js', import.meta.url)
       );
@@ -241,6 +271,7 @@ export const useVoiceSession = () => {
 
   const disconnect = useCallback(() => {
     cleanupAudio();
+    closeOutput();
     clearActivityTimer();
     pendingStartRef.current = false;
     readyRef.current = false;
@@ -252,7 +283,7 @@ export const useVoiceSession = () => {
 
     setStatus('idle');
     setActivity('idle');
-  }, [cleanupAudio, clearActivityTimer]);
+  }, [cleanupAudio, closeOutput, clearActivityTimer]);
 
   const connect = useCallback(() => {
     if (wsRef.current) return;
@@ -303,10 +334,41 @@ export const useVoiceSession = () => {
           setActivity('listening');
         }
 
-        const parsed = extractText(data);
-        if (parsed) {
-          appendLog(parsed);
-        } else {
+        // Acumular la transcripcion del usuario (fragmentos incrementales).
+        const inputText = data?.serverContent?.inputTranscription?.text;
+        if (inputText) {
+          userTurnRef.current += inputText;
+          upsertLiveLog('user', userTurnRef.current, liveUserIdRef);
+        }
+
+        // Acumular la transcripcion del modelo: texto de modelTurn.parts y/o de
+        // outputTranscription (modo audio nativo).
+        const modelPartsText = (data?.serverContent?.modelTurn?.parts || [])
+          .map((part) => part.text)
+          .filter(Boolean)
+          .join('');
+        const outputText = data?.serverContent?.outputTranscription?.text || '';
+        const modelFragment = modelPartsText + outputText;
+        if (modelFragment) {
+          modelTurnRef.current += modelFragment;
+          upsertLiveLog('model', modelTurnRef.current, liveModelIdRef);
+        }
+
+        // Turno cerrado por el Live: fijar el texto acumulado y reiniciar.
+        if (data?.serverContent?.turnComplete) {
+          finalizeTranscriptTurn();
+        }
+
+        // Fallback diagnostico: si el mensaje no traia transcripcion ni audio ni
+        // fin de turno, registrarlo crudo en el panel de eventos (como antes).
+        const handledTranscript = Boolean(inputText) || Boolean(modelFragment);
+        const hadAudio = parts.some((part) => part?.inlineData?.data);
+        if (
+          !handledTranscript &&
+          !hadAudio &&
+          !data?.serverContent?.turnComplete &&
+          !data?.setupComplete
+        ) {
           appendLog({ role: 'event', text: JSON.stringify(data) });
         }
       } catch (error) {
@@ -322,13 +384,22 @@ export const useVoiceSession = () => {
 
     ws.onclose = () => {
       cleanupAudio();
+      closeOutput();
       wsRef.current = null;
       readyRef.current = false;
       setStatus('idle');
       setActivity('idle');
       appendLog({ role: 'system', text: 'WebSocket cerrado.' });
     };
-  }, [appendLog, cleanupAudio, scheduleActivityReset, startRecordingNow]);
+  }, [
+    appendLog,
+    cleanupAudio,
+    closeOutput,
+    scheduleActivityReset,
+    startRecordingNow,
+    upsertLiveLog,
+    finalizeTranscriptTurn,
+  ]);
 
   const startRecording = useCallback(() => {
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
@@ -360,12 +431,13 @@ export const useVoiceSession = () => {
 
   useEffect(() => () => {
     cleanupAudio();
+    closeOutput();
     clearActivityTimer();
     if (wsRef.current) {
       wsRef.current.close();
       wsRef.current = null;
     }
-  }, [cleanupAudio, clearActivityTimer]);
+  }, [cleanupAudio, closeOutput, clearActivityTimer]);
 
   return {
     status,
