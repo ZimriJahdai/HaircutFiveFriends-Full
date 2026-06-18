@@ -1,10 +1,5 @@
 export const StarDisplay = ({ value }) => (
-  <span
-    style={{
-      color: '#C9A84C',
-      fontSize: '14px',
-    }}
-  >
+  <span className="text-[#C9A84C] text-sm">
     {'★'.repeat(Math.round(value))}
     {'☆'.repeat(5 - Math.round(value))}
   </span>

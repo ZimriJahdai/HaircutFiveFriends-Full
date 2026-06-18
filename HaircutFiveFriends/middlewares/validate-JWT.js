@@ -71,7 +71,24 @@ export const authorizeRoles = (...allowedRoles) => {
 export const attachClientFromToken = async (req, res, next) => {
     try {
         if (!req.userId) return next();
-        req.clientFromToken = await Client.findOne({ userId: req.userId });
+
+        let client = await Client.findOne({ userId: req.userId });
+
+        if (!client && req.auth?.email) {
+            client = await Client.findOne({ email: req.auth.email.toLowerCase() });
+        }
+
+        if (!client && req.auth?.email) {
+            client = await Client.create({
+                userId: req.userId,
+                name: req.auth.name || req.auth.email.split('@')[0] || 'Cliente',
+                email: req.auth.email.toLowerCase(),
+                phone: req.auth.phone || '00000000',
+                password: Math.random().toString(36).slice(2),
+            });
+        }
+
+        req.clientFromToken = client || null;
         next();
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });

@@ -5,7 +5,7 @@ import {
   deleteReview as deleteReviewRequest,
 } from "../../../shared/api/review";
 
-export const useReviewClientStore = create((set, get) => ({
+export const useReviewStore = create((set, get) => ({
   reviews: [],
   loading: false,
   error: null,
@@ -14,44 +14,30 @@ export const useReviewClientStore = create((set, get) => ({
     try {
       set({ loading: true, error: null });
       const response = await getAllReviews();
-      set({
-        reviews: response.data || [],
-        loading: false,
-      });
+      set({ reviews: response.data || [], loading: false });
     } catch (error) {
-      set({
-        error: error.response?.data?.message || "Error al obtener las reseñas",
-        loading: false,
-      });
+      set({ error: error.response?.data?.message || "Error al obtener las reseñas", loading: false });
     }
   },
 
   createReview: async (data) => {
     try {
-      set({ loading: true, error: null });
+      set({ error: null });
       await createReviewRequest(data);
       await get().getReviews();
-      set({ loading: false });
     } catch (error) {
-      set({
-        error: error.response?.data?.message || "Error al crear la reseña",
-        loading: false,
-      });
+      set({ error: error.response?.data?.message || "Error al crear la reseña" });
       throw error;
     }
   },
 
   deleteReview: async (id) => {
     try {
-      set({ loading: true, error: null });
+      set({ error: null });
       await deleteReviewRequest(id);
       await get().getReviews();
-      set({ loading: false });
     } catch (error) {
-      set({
-        error: error.response?.data?.message || "Error al eliminar la reseña",
-        loading: false,
-      });
+      set({ error: error.response?.data?.message || "Error al eliminar la reseña" });
       throw error;
     }
   },

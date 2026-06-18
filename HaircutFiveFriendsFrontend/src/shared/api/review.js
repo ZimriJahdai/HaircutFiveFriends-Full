@@ -1,9 +1,11 @@
 import { axiosAdmin } from './api';
 
-export const getAllReviews = () => axiosAdmin.get('/reviews');
+const BASE = '/review';
 
-export const getReviewsByBarbero = (barberoId) => axiosAdmin.get(`/reviews/barbero/${barberoId}`);
+export const getAllReviews = () => axiosAdmin.get(`${BASE}/obtener`).then(r => r.data);
 
-export const createReview = (data) => axiosAdmin.post('/reviews', data);
+export const getReviewsByBarbero = (barberoId) => axiosAdmin.get(`${BASE}/barbero/${barberoId}`).then(r => r.data);
 
-export const deleteReview = (id) => axiosAdmin.delete(`/reviews/${id}`);
+export const createReview = (data) => axiosAdmin.post(`${BASE}/crear`, data).then(r => r.data);
+
+export const deleteReview = (id) => axiosAdmin.delete(`${BASE}/eliminar/${id}`).then(r => r.data);

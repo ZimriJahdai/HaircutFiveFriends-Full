@@ -25,11 +25,10 @@ import { Barberos } from '../../features/barber-client/pages/Barberos.jsx';
 import { Favoritos } from '../../features/favorites/pages/Favoritos.jsx';
 
 
+
 // Componentes unificados
 import { Services } from '../../features/services/pages/Services.jsx';
-
-import { ReviewAdmin } from '../../features/review-admin/pages/ReviewAdmin.jsx';
-import { ReviewClient } from '../../features/review-client/pages/ReviewClient.jsx';
+import { Reviews } from '../../features/reviews/pages/Reviews.jsx';
 
 
 
@@ -135,8 +134,9 @@ export const AppRoutes = () => {
 
         <Route 
           path="resenas" 
-          element={<ReviewAdmin />} 
+          element={<Reviews />} 
         />
+
 
 
 
@@ -216,7 +216,7 @@ export const AppRoutes = () => {
 
         <Route 
           path="resenas" 
-          element={<ReviewClient />} 
+          element={<Reviews />} 
         />
 
 
