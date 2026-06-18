@@ -77,6 +77,11 @@ export default function NavbarClient() {
             )}
           </NavLink>
 
+          <NavLink to="/client/resenas" className={navLinkClass}>
+            <i className="ti ti-star text-base" />
+            Reseñas
+          </NavLink>
+
           <NavLink to="/client/reservar" className={navLinkClass}>
             <i className="ti ti-calendar-event text-base" />
             Reservar

@@ -71,29 +71,34 @@ export const authorizeRoles = (...allowedRoles) => {
 export const attachClientFromToken = async (req, res, next) => {
     try {
         if (!req.userId) return next();
-        
+
         let client = await Client.findOne({ userId: req.userId });
-        
-        // Si el usuario es un cliente pero no tiene perfil en MongoDB, lo auto-creamos
-        if (!client && req.userRole === 'USER_ROLE') {
-            const name = req.auth?.name || req.auth?.Name || req.auth?.User?.Name || 'Cliente Autocreado';
-            const email = req.auth?.email || req.auth?.Email || req.auth?.User?.Email || 'correo@temp.com';
+
+        // If not found by userId, try finding by email
+        const email = (req.auth?.email || req.auth?.Email || req.auth?.User?.Email || req.auth?.email || '').toLowerCase();
+        if (!client && email) {
+            client = await Client.findOne({ email });
+        }
+
+        // If still not found and they are a client (USER_ROLE), auto-create profile
+        if (!client && (req.userRole === 'USER_ROLE' || email)) {
+            const name = req.auth?.name || req.auth?.Name || req.auth?.User?.Name || email.split('@')[0] || 'Cliente Autocreado';
             const phone = req.auth?.phone || req.auth?.Phone || req.auth?.User?.Phone || '00000000';
-            
+
             console.log('attachClientFromToken | Auto-creando perfil de cliente en MongoDB:', email);
-            
+
             client = await Client.create({
                 userId: req.userId,
                 name: name,
-                email: email,
+                email: email || `${req.userId}@temp.com`,
                 phone: phone,
-                password: 'AutoCreatedPassword123!', // Contraseña dummy, la autenticación real ocurre en AuthService
+                password: Math.random().toString(36).slice(2), // Contraseña dummy, la autenticación real ocurre en AuthService
                 status: true,
                 points: 0
             });
         }
-        
-        req.clientFromToken = client;
+
+        req.clientFromToken = client || null;
         console.log('attachClientFromToken | req.userId:', req.userId, '| client found:', req.clientFromToken ? req.clientFromToken.name : 'null');
         next();
     } catch (error) {

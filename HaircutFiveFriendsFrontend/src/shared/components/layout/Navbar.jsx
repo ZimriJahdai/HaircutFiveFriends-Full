@@ -12,7 +12,7 @@ const ROUTE_LABELS = {
   '/dashboard/productos': 'Productos',
   '/dashboard/servicios': 'Servicios',
   '/dashboard/resenas': 'Reseñas',
-  '/dashboard/configuracion': 'Configuración',
+
   '/client': 'Inicio',
   '/client/reservar': 'Reservar cita',
   '/client/citas': 'Mis citas',
@@ -167,7 +167,7 @@ export default function Navbar({ onToggleSidebar, hasNotifications = true }) {
 
   const goToProfile = () => {
     setDropOpen(false);
-    navigate(role === 'ADMIN_ROLE' ? '/dashboard/configuracion' : '/client/perfil');
+    navigate('/client/perfil');
   };
 
   return (
