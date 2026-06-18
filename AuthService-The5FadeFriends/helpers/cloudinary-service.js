@@ -29,7 +29,9 @@ export const uploadImage = async (filePath, fileName) => {
 
     // Eliminar archivo local después de subir exitosamente
     try {
-      await fs.unlink(filePath);
+      if (!filePath.startsWith('data:')) {
+        await fs.unlink(filePath);
+      }
     } catch {
       console.warn('Warning: Could not delete local file:', filePath);
     }
@@ -38,12 +40,14 @@ export const uploadImage = async (filePath, fileName) => {
       throw new Error(`Error uploading image: ${result.error.message}`);
     }
 
-    return fileName;
+    return result.secure_url;
   } catch (error) {
     console.error('Error uploading to Cloudinary:', error?.message || error);
 
     try {
-      await fs.unlink(filePath);
+      if (filePath && !filePath.startsWith('data:')) {
+        await fs.unlink(filePath);
+      }
     } catch {
       console.warn('Warning: Could not delete local file after upload error');
     }
@@ -61,9 +65,17 @@ export const deleteImage = async (imagePath) => {
     }
 
     const folder = config.cloudinary.folder;
-    const publicId = imagePath.includes('/')
-      ? imagePath
-      : `${folder}/${imagePath}`;
+    let publicId;
+
+    if (imagePath.startsWith('http')) {
+      const urlParts = new URL(imagePath).pathname.replace(/^\//, '');
+      publicId = urlParts.replace(/\.[^.]+$/, '');
+    } else if (imagePath.includes('/')) {
+      publicId = imagePath;
+    } else {
+      publicId = `${folder}/${imagePath}`;
+    }
+
     const result = await cloudinary.uploader.destroy(publicId);
 
     return result.result;
@@ -78,16 +90,14 @@ export const getFullImageUrl = (imagePath) => {
     return getDefaultAvatarUrl();
   }
 
+  if (imagePath.startsWith('http')) {
+    return imagePath;
+  }
+
   const baseUrl = config.cloudinary.baseUrl;
   const folder = config.cloudinary.folder;
 
-  const pathToUse = !imagePath
-    ? config.cloudinary.defaultAvatarPath
-    : imagePath.includes('/')
-      ? imagePath
-      : `${folder}/${imagePath}`;
-
-  return `${baseUrl}${pathToUse}`;
+  return `${baseUrl}${folder}/${imagePath}`;
 };
 
 export const getDefaultAvatarUrl = () => {

@@ -82,24 +82,7 @@ export const registerUserHelper = async (userData) => {
           profilePictureToStore = null;
         }
       } else {
-        // Si viene una URL/ruta de Cloudinary, normalizar y almacenar solo el filename
-        try {
-          const baseUrl = config.cloudinary.baseUrl || '';
-          const folder = config.cloudinary.folder || '';
-          let normalized = profilePicture;
-          if (normalized.startsWith(baseUrl)) {
-            normalized = normalized.slice(baseUrl.length);
-          }
-          if (folder && normalized.startsWith(`${folder}/`)) {
-            normalized = normalized.slice(folder.length + 1);
-          }
-          // Si aún hay slashes, tomar el último segmento
-          profilePictureToStore = normalized.split('/').pop();
-        } catch (normErr) {
-          console.warn('Could not normalize profile picture path:', normErr);
-          // fallback: mantener nulo para usar el default
-          profilePictureToStore = null;
-        }
+        profilePictureToStore = profilePicture;
       }
     }
 

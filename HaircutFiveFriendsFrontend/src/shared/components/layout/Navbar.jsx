@@ -13,6 +13,7 @@ const ROUTE_LABELS = {
   '/dashboard/servicios': 'Servicios',
   '/dashboard/resenas': 'Reseñas',
   '/dashboard/configuracion': 'Configuración',
+  '/dashboard/perfil': 'Mi perfil',
   '/client': 'Inicio',
   '/client/reservar': 'Reservar cita',
   '/client/citas': 'Mis citas',
@@ -167,7 +168,7 @@ export default function Navbar({ onToggleSidebar, hasNotifications = true }) {
 
   const goToProfile = () => {
     setDropOpen(false);
-    navigate(role === 'ADMIN_ROLE' ? '/dashboard/configuracion' : '/client/perfil');
+    navigate(role === 'ADMIN_ROLE' || role === 'EMPLOYEE_ROLE' ? '/dashboard/perfil' : '/client/perfil');
   };
 
   return (
@@ -230,10 +231,15 @@ export default function Navbar({ onToggleSidebar, hasNotifications = true }) {
             aria-expanded={dropOpen}
           >
             <div style={s.avatar}>
-              {user?.profilePicture ? (
+              {user?.profilePicture || user?.ProfilePicture ? (
                 <img
-                  src={user.profilePicture} alt="Foto de perfil"
+                  src={user.profilePicture || user.ProfilePicture} alt="Foto de perfil"
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.style.display = 'none';
+                    e.target.parentNode.innerText = initials;
+                  }}
                 />
               ) : initials}
             </div>

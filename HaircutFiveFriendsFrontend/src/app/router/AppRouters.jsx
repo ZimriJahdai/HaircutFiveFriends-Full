@@ -47,6 +47,7 @@ export const AppRoutes = () => {
         <Route path="servicios" element={<Services />} />   {/* ← unificado */}
         <Route path="resenas" element={<Reviews />} />       {/* ← unificado */}
         <Route path="clientes" element={<Client />} />
+        <Route path="perfil" element={<Perfil />} />
       </Route>
 
       {/* Rutas cliente */}

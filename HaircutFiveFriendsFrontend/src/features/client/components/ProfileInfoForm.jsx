@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../../auth/store/authStore.js';
+import { authService } from '../../../shared/api/auth.js';
 
-export const ProfileInfoForm = () => {
-  const { user, updateUser } = useAuthStore();
-  const [isEditing, setIsEditing] = useState(false);
+export const ProfileInfoForm = ({ isEditing, setIsEditing, previewAvatar, setPreviewAvatar }) => {
+  const { user, token, updateUser } = useAuthStore();
   const [isSaving, setIsSaving] = useState(false);
 
   const {
@@ -20,12 +20,28 @@ export const ProfileInfoForm = () => {
     },
   });
 
+  const isAvatarChanged = !!previewAvatar;
+
   const onSave = async (data) => {
     setIsSaving(true);
     try {
-      updateUser({ name: data.name, phone: data.phone });
-      toast.success('Perfil actualizado correctamente');
-      setIsEditing(false);
+      const updatePayload = {
+        name: data.name,
+        phone: data.phone,
+      };
+      if (previewAvatar) {
+        updatePayload.profilePicture = previewAvatar;
+      }
+
+      const response = await authService.updateProfile(token, updatePayload);
+      if (response?.success && response.data) {
+        updateUser(response.data);
+        toast.success('Perfil actualizado correctamente');
+        setIsEditing(false);
+        setPreviewAvatar(null);
+      } else {
+        toast.error(response?.message || 'Error al actualizar el perfil');
+      }
     } catch {
       toast.error('Error al actualizar el perfil');
     } finally {
@@ -36,6 +52,7 @@ export const ProfileInfoForm = () => {
   const onCancel = () => {
     reset({ name: user?.name || '', phone: user?.phone || '' });
     setIsEditing(false);
+    setPreviewAvatar(null);
   };
 
   return (
@@ -132,7 +149,7 @@ export const ProfileInfoForm = () => {
         <div className="flex items-center gap-3 mt-6 pt-5 border-t border-white/[0.06]">
           <button
             type="submit"
-            disabled={isSaving || !isDirty}
+            disabled={isSaving || (!isDirty && !isAvatarChanged)}
             className="flex items-center gap-2 bg-[#00D2C4] hover:bg-[#00B4A8] disabled:opacity-40 disabled:cursor-not-allowed text-[#0A0A0A] font-semibold text-sm px-5 py-2.5 rounded-xl transition-all duration-200 shadow-[0_4px_16px_rgba(0,210,196,0.2)] hover:shadow-[0_6px_24px_rgba(0,210,196,0.35)] cursor-pointer"
           >
             {isSaving ? (
