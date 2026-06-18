@@ -9,6 +9,7 @@ export const useFavorites = () => {
   const favorites = useFavoritesStore((s) => s.favorites);
   const loading = useFavoritesStore((s) => s.loading);
   const error = useFavoritesStore((s) => s.error);
+  const fetched = useFavoritesStore((s) => s.fetched);
   const fetchFavorites = useFavoritesStore((s) => s.fetchFavorites);
   const toggleFavorite = useFavoritesStore((s) => s.toggleFavorite);
   const isFavorite = useFavoritesStore((s) => s.isFavorite);
@@ -16,7 +17,11 @@ export const useFavorites = () => {
   const removeFavorite = useFavoritesStore((s) => s.removeFavorite);
 
   useEffect(() => {
-    fetchFavorites();
+    const controller = new AbortController();
+    fetchFavorites(false, controller.signal);
+    return () => {
+      controller.abort();
+    };
   }, [fetchFavorites]);
 
   const favoriteIds = favorites.map((fav) => fav.referenceId?._id || fav.referenceId?.id || fav.referenceId);
@@ -25,6 +30,7 @@ export const useFavorites = () => {
     favorites,
     favoriteIds,
     loading,
+    fetched,
     error,
     fetchFavorites,
     toggleFavorite,

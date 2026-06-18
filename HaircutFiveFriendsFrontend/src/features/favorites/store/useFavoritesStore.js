@@ -8,17 +8,18 @@ export const useFavoritesStore = create((set, get) => ({
   fetched: false,
   error: null,
 
-  fetchFavorites: async (force = false) => {
+  fetchFavorites: async (force = false, signal = null) => {
     // Si ya se cargaron y no se está forzando una recarga, omitimos para evitar bucles infinitos
     if (get().fetched && !force && !get().loading) return;
 
     try {
       set({ loading: true, error: null });
-      const response = await apiGetFavorites();
+      const response = await apiGetFavorites(undefined, signal ? { signal } : {});
       const favorites = response.data.data || [];
       const favoriteIds = favorites.map((fav) => fav.referenceId?._id || fav.referenceId?.id || fav.referenceId);
       set({ favorites, favoriteIds, fetched: true, loading: false });
     } catch (error) {
+      if (error.name === 'CanceledError' || error.name === 'AbortError') return;
       set({
         error: error.response?.data?.message || 'Error al obtener favoritos',
         loading: false,
@@ -83,5 +84,18 @@ export const useFavoritesStore = create((set, get) => ({
     );
   },
 
-  clearFavorites: () => set({ favorites: [], favoriteIds: [], fetched: false }),
+  clearFavorites: async () => {
+    const currentFavs = get().favorites;
+    if (currentFavs.length === 0) return;
+    try {
+      set({ loading: true, error: null });
+      await Promise.all(currentFavs.map((fav) => apiDeleteFavorite(fav._id)));
+      set({ favorites: [], favoriteIds: [], fetched: true, loading: false });
+    } catch (error) {
+      set({
+        error: error.response?.data?.message || 'Error al limpiar favoritos',
+        loading: false,
+      });
+    }
+  },
 }));

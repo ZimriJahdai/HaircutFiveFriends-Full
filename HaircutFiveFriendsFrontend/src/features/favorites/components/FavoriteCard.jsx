@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { FavoriteButton } from './FavoriteButton.jsx';
 
 export const FavoriteCard = ({ favorite }) => {
-  const { _id: favoriteRecordId, typeFavorite, referenceId } = favorite;
+  const { typeFavorite, referenceId } = favorite;
 
   if (!referenceId) {
     return (
@@ -56,7 +56,7 @@ export const FavoriteCard = ({ favorite }) => {
       );
       break;
 
-    case 'SERVICE':
+    case 'SERVICE': {
       fallbackIcon = 'ti-scissors';
       badgeText = `Categoría: ${referenceId.category?.replace(/_/g, ' ')}`;
       detailsText = `Duración: ${referenceId.duration || 'N/A'}`;
@@ -78,6 +78,7 @@ export const FavoriteCard = ({ favorite }) => {
         </div>
       );
       break;
+    }
 
     case 'HAIRCUT':
       imageSrc = referenceId.imageRef;

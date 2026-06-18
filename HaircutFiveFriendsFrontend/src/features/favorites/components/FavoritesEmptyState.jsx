@@ -44,21 +44,21 @@ export const FavoritesEmptyState = ({ variant, onAction, query }) => {
   if (variant === 'unavailable') {
     return (
       <div className="flex flex-col items-center gap-5 py-24 text-center">
-        <i className="ti ti-heart-broken text-7xl text-[#1E1E1E]" aria-hidden="true" />
+        <i className="ti ti-folder-off text-7xl text-[#1E1E1E]" aria-hidden="true" />
         <div>
           <h2 className="font-['Bebas_Neue',sans-serif] text-2xl tracking-[2px] text-[#E8E4DC] mb-1">
-            Favoritos no disponibles
+            Sin favoritos en esta categoría
           </h2>
           <p className="text-[#5A5A5A] text-[13px]">
-            Los elementos guardados ya no están disponibles en este momento.
+            No has agregado elementos a esta sección todavía.
           </p>
         </div>
         <button
           type="button"
           onClick={onAction}
-          className="text-[12px] text-[#E88] hover:underline focus:outline-none"
+          className="text-[13px] text-[#00D2C4] hover:underline focus:outline-none font-medium transition-colors"
         >
-          Limpiar lista
+          Mostrar todos los favoritos
         </button>
       </div>
     );

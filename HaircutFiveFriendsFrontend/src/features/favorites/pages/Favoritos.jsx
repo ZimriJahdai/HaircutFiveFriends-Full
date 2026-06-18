@@ -4,6 +4,7 @@ import { FavoritesHeader } from '../components/FavoritesHeader.jsx';
 import { FavoritesEmptyState } from '../components/FavoritesEmptyState.jsx';
 import { FavoriteCard } from '../components/FavoriteCard.jsx';
 import { useFavorites } from '../hooks/useFavorites.js';
+import { ConfirmModal } from '../components/ConfirmModal.jsx';
 
 const TABS = [
   { id: 'ALL', label: 'Todos', icon: 'ti-apps' },
@@ -14,9 +15,10 @@ const TABS = [
 ];
 
 export const Favoritos = () => {
-  const { favorites, loading, clearFavorites } = useFavorites();
+  const { favorites, loading, fetched, clearFavorites } = useFavorites();
   const [activeTab, setActiveTab] = useState('ALL');
   const [query, setQuery] = useState('');
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const counts = useMemo(() => {
     const countsMap = { ALL: favorites.length, HAIRCUT: 0, PRODUCT: 0, SERVICE: 0, BARBER: 0 };
@@ -43,11 +45,15 @@ export const Favoritos = () => {
   }, [tabFiltered, query]);
 
   const getVariant = () => {
-    if (loading) return 'loading';
+    if (loading && !fetched) return 'loading';
     if (favorites.length === 0) return 'empty';
     if (tabFiltered.length === 0) return 'unavailable';
     if (query && filtered.length === 0) return 'no-results';
     return null;
+  };
+
+  const handleClearFavorites = () => {
+    setShowConfirm(true);
   };
 
   const variant = getVariant();
@@ -57,7 +63,7 @@ export const Favoritos = () => {
       <NavbarClient />
 
       <main className="flex-1 max-w-[1200px] w-full mx-auto px-6 py-10">
-        <FavoritesHeader showClear={favorites.length > 0} onClear={clearFavorites} />
+        <FavoritesHeader showClear={favorites.length > 0} onClear={handleClearFavorites} />
 
         <div className="h-[1px] bg-[#00D2C4]/20 mb-8" />
 
@@ -149,6 +155,17 @@ export const Favoritos = () => {
           </>
         )}
       </main>
+
+      <ConfirmModal
+        isOpen={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onConfirm={clearFavorites}
+        title="¿Limpiar favoritos?"
+        message="¿Estás seguro de que deseas eliminar todos tus favoritos? Esta acción no se puede deshacer y los eliminará de tu cuenta de forma permanente."
+        confirmText="Eliminar todos"
+        cancelText="Cancelar"
+        variant="danger"
+      />
     </div>
   );
 };
