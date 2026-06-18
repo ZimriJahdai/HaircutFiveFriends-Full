@@ -4,6 +4,7 @@ import {
   getUserRoles,
   getUsersByRole,
   createEmployee,
+  updateProfile,
 } from './user.controller.js';
 
 import { validateJWT } from '../../middlewares/validate-JWT.js';
@@ -179,5 +180,38 @@ router.get('/all', validateJWT, async (req, res) => {
 
   return res.status(200).json({ success: true, users });
 });
+
+// PUT /api/v1/users/profile
+/**
+ * @swagger
+ * /api/v1/users/profile:
+ *   put:
+ *     tags: [Users]
+ *     summary: Update own profile (name, phone, profilePicture)
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [name, phone]
+ *             properties:
+ *               name:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *               profilePicture:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Profile updated
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ */
+router.put('/profile', ...updateProfile);
 
 export default router;

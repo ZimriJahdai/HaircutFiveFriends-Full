@@ -29,7 +29,9 @@ export const AvatarUser = ({ dark = false, menuItems }) => {
         navigate("/", { replace: true });
     };
 
-    const avatarSrc = user?.ProfilePicture && user.ProfilePicture.trim() !== "" ? user.ProfilePicture : defaultAvatarImg;
+    const avatarSrc =
+        (user?.profilePicture && user.profilePicture.trim() !== "") ? user.profilePicture :
+        (user?.ProfilePicture && user.ProfilePicture.trim() !== "") ? user.ProfilePicture : defaultAvatarImg;
 
     const items = menuItems || DEFAULT_MENU_ITEMS;
 
