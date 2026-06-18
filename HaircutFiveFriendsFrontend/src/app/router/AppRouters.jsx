@@ -16,11 +16,12 @@ import { Barberos } from '../../features/barber-client/pages/Barberos.jsx';
 import { Favoritos } from '../../features/favorites/pages/Favoritos.jsx';
 import { ProductsAdmin } from '../../features/products/pages/ProductsAdmin.jsx';
 import { ProductsClient } from '../../features/products/pages/ProductsClient.jsx';
+import WelcomePage from '../pages/WelcomePage.jsx';
 
 export const AppRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={<AuthPage />} />
+      <Route path="/" element={<WelcomePage />} />
       <Route path="/auth" element={<AuthPage />} />
       <Route path="/verify-email" element={<VerifyEmailPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
