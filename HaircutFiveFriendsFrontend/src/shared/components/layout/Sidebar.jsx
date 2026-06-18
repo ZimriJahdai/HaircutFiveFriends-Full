@@ -14,6 +14,7 @@ const NAV_CONFIG = {
     { type: 'section', label: 'Servicios' },
     { label: 'Servicios',          icon: 'ti-scissors',   to: '/dashboard/servicios' },
     { label: 'Reseñas',            icon: 'ti-star',       to: '/dashboard/resenas' },
+    { type: 'section', label: 'Cuenta' },
   ],
   USER_ROLE: [
     { label: 'Inicio',             icon: 'ti-home',           to: '/client' },
