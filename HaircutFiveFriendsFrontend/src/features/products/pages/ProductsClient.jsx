@@ -1,48 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
-import { getProducts, getRedeemableProducts } from '../../../shared/api/product';
+import { useState, useMemo } from 'react';
+import NavbarClient from '../../client/components/NavbarClient.jsx';
+import { useProducts } from '../hooks/useProducts.js';
 import { ProductCard } from '../components/ProductCard';
 import { ProductEmptyState } from '../components/ProductEmptyState';
 import { ProductPageHeader } from '../components/ProductPageHeader';
 
 export const ProductsClient = () => {
-  const [products, setProducts] = useState([]);
-  const [redeemableProducts, setRedeemableProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { products, redeemableProducts, loading, error } = useProducts();
   const [tab, setTab] = useState('catalog');
-
-  useEffect(() => {
-    let ignore = false;
-
-    const load = async () => {
-      try {
-        const [allResponse, redeemableResponse] = await Promise.all([
-          getProducts(),
-          getRedeemableProducts(),
-        ]);
-
-        if (!ignore) {
-          const allProducts = allResponse.data?.data || [];
-          setProducts(allProducts.filter((product) => product.status === 'active'));
-          setRedeemableProducts(redeemableResponse.data?.data || []);
-        }
-      } catch (err) {
-        if (!ignore) {
-          setError(err.response?.data?.message || 'Error al cargar productos');
-        }
-      } finally {
-        if (!ignore) {
-          setLoading(false);
-        }
-      }
-    };
-
-    void load();
-
-    return () => {
-      ignore = true;
-    };
-  }, []);
 
   const stats = useMemo(() => ({
     catalog: products.length,
@@ -55,14 +20,18 @@ export const ProductsClient = () => {
     : 'No hay productos habilitados para canjear con puntos.';
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] font-sans text-[#E8E4DC] w-full px-6 py-6 md:px-8 md:py-8">
-      <div className="max-w-[1400px] mx-auto">
+    <div className="min-h-screen bg-[#0A0A0A] text-white flex flex-col font-sans">
+      <NavbarClient />
+
+      <main className="flex-1 max-w-[1200px] w-full mx-auto px-6 py-10">
         <ProductPageHeader
           title="Productos"
           subtitle="Explora el catálogo y los productos que puedes canjear con tus puntos."
         />
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+        <div className="h-[1px] bg-[#00D2C4]/20 mb-8" />
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
           <div className="rounded-xl border border-[#2A2A2A] bg-[#111] p-4">
             <div className="text-[11px] uppercase tracking-[2px] text-[#5A5A5A]">Catálogo activo</div>
             <div className="mt-2 font-['Bebas_Neue',sans-serif] text-4xl tracking-[2px] text-[#E8E4DC]">{stats.catalog}</div>
@@ -73,24 +42,22 @@ export const ProductsClient = () => {
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 mb-6">
+        <div className="flex flex-wrap gap-2 mb-8">
           <button
             type="button"
             onClick={() => setTab('catalog')}
-            className={`rounded-full px-4 py-2 text-[13px] border transition-colors ${tab === 'catalog' ? 'bg-[#C9A84C] border-[#C9A84C] text-[#0A0A0A]' : 'bg-transparent border-[#2A2A2A] text-[#A5A5A5] hover:border-[#C9A84C] hover:text-[#E8E4DC]'}`}
+            className={`rounded-xl px-5 py-2.5 text-[13px] font-medium border transition-colors focus:outline-none cursor-pointer ${tab === 'catalog' ? 'bg-[#00D2C4] border-[#00D2C4] text-[#0A0A0A] shadow-[0_0_12px_rgba(0,210,196,0.3)]' : 'bg-[#111] border-[#222] text-[#A5A5A5] hover:border-[#00D2C4] hover:text-[#00D2C4]'}`}
           >
             Catálogo
           </button>
           <button
             type="button"
             onClick={() => setTab('redeemable')}
-            className={`rounded-full px-4 py-2 text-[13px] border transition-colors ${tab === 'redeemable' ? 'bg-[#C9A84C] border-[#C9A84C] text-[#0A0A0A]' : 'bg-transparent border-[#2A2A2A] text-[#A5A5A5] hover:border-[#C9A84C] hover:text-[#E8E4DC]'}`}
+            className={`rounded-xl px-5 py-2.5 text-[13px] font-medium border transition-colors focus:outline-none cursor-pointer ${tab === 'redeemable' ? 'bg-[#00D2C4] border-[#00D2C4] text-[#0A0A0A] shadow-[0_0_12px_rgba(0,210,196,0.3)]' : 'bg-[#111] border-[#222] text-[#A5A5A5] hover:border-[#00D2C4] hover:text-[#00D2C4]'}`}
           >
             Canjeables por puntos
           </button>
         </div>
-
-        <div className="h-[1px] bg-[#C9A84C]/20 mb-6" />
 
         {error && (
           <div className="bg-[#2A1515] border border-[#5A2020] rounded-lg px-3.5 py-2.5 text-[12px] text-[#E88] mb-4 flex items-center gap-2">
@@ -101,7 +68,7 @@ export const ProductsClient = () => {
 
         {loading ? (
           <div className="flex flex-col items-center gap-3 py-16 text-[#5A5A5A] text-[13px]">
-            <div className="w-6 h-6 border-2 border-[#2A2A2A] border-t-[#C9A84C] rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-[#2A2A2A] border-t-[#00D2C4] rounded-full animate-spin" />
             <span>Cargando productos…</span>
           </div>
         ) : activeList.length === 0 ? (
@@ -111,13 +78,13 @@ export const ProductsClient = () => {
             subtitle={emptyMessage}
           />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
             {activeList.map((product) => (
               <ProductCard key={product._id || product.id} product={product} />
             ))}
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 };

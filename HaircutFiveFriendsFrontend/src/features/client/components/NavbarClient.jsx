@@ -57,6 +57,11 @@ export default function NavbarClient() {
             Productos
           </NavLink>
 
+          <NavLink to="/client/probar-corte" className={navLinkClass}>
+            <i className="ti ti-camera text-base" />
+            Probar corte
+          </NavLink>
+
           <NavLink to="/client/galeria" className={navLinkClass}>
             <i className="ti ti-photo text-base" />
             Estilos

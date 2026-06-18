@@ -7,6 +7,7 @@ import { getGenAI, MODELS } from "../configs/genai.js";
 // describeFace usa el modelo de VISION (distinto del chatbot/texto).
 const VISION_MODEL = MODELS.VISION;
 const GEMINI_IMAGE_MODEL = MODELS.IMAGE;
+const SUMMARY_MODEL = MODELS.SUMMARY;
 
 // -- Helpers ------------------------------------------------------------------
 function sanitizeBase64(b64) {
@@ -147,6 +148,34 @@ function buildHaircutPrompt(faceSummary, haircutOptions = {}) {
     `If any text is returned, write it in plain Spanish with no markdown. ` +
     `Face analysis for reference: ${faceSummaryText}.`
   );
+}
+
+// -- summarizeAssistantReply --------------------------------------------------
+/**
+ * Resume en una frase la respuesta hablada del asistente, para guardarla en el
+ * historial sin gastar muchos tokens del Live. Usa el modelo SUMMARY (ligero).
+ * Si falla o el texto es vacio, devuelve cadena vacia (el llamador decide).
+ *
+ * @param {string} text - Transcripcion de la respuesta del asistente.
+ * @returns {Promise<string>} Resumen breve en espanol (o '' si no hay nada).
+ */
+export async function summarizeAssistantReply(text) {
+  const clean = (text || "").trim();
+  if (!clean) return "";
+
+  const response = await generateWithRetry(async () => {
+    return await getGenAI().models.generateContent({
+      model: SUMMARY_MODEL,
+      contents: [
+        "Resume en una sola frase breve, en espanol, esta respuesta del " +
+          "asistente de HaircutFiveFriends. Devuelve SOLO el resumen, sin " +
+          "preambulo ni comillas:\n\n" +
+          clean,
+      ],
+    });
+  });
+
+  return (response.text || "").trim();
 }
 
 // -- describeFace (Gemini API via SDK en Vertex AI) --------------------------

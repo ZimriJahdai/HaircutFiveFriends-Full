@@ -1,4 +1,4 @@
-import { getGenAI, MODELS } from '../../configs/genai.js';
+import { getGenAI, MODELS, LOCATIONS } from '../../configs/genai.js';
 
 // Logica de negocio del analisis de reseñas con Gemini.
 // El controller solo orquesta (valida, obtiene datos, responde); aqui vive la IA.
@@ -26,7 +26,7 @@ export const analyzeReviewsWithAI = async (reviews) => {
         .map((r) => `- [${r.rating} estrellas]: ${r.comment}`)
         .join('\n');
 
-    const ai = getGenAI();
+    const ai = getGenAI(LOCATIONS.TEXT);
     const response = await ai.models.generateContent({
         model: MODELS.TEXT,
         contents: buildReviewsPrompt(reviewsText),

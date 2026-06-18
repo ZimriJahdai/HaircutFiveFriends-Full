@@ -33,6 +33,26 @@ export const dbConnection = async () => {
             serverSelectionTimeoutMS: 5000,
             maxPoolSize: 10
         });
+
+        // Verificar si la base de datos está vacía y ejecutar seed.js
+        try {
+            const barberCount = await mongoose.connection.db.collection('barbers').countDocuments();
+            if (barberCount === 0) {
+                console.log('MongoDB | Base de datos vacía en barberos');
+                const { exec } = await import('child_process');
+                exec('node seed.js', (err, stdout, stderr) => {
+                    if (err) {
+                        console.error(`MongoDB | Error al ejecutar seed.js: ${err.message}`);
+                        return;
+                    }
+                    console.log(`MongoDB | Seeder completado:\n${stdout}`);
+                });
+            } else {
+                console.log(`MongoDB | Registros existentes encontrados (${barberCount} barberos). Omitiendo seed.`);
+            }
+        } catch (dbErr) {
+            console.warn(`MongoDB | No se pudo verificar la colección para seed: ${dbErr.message}`);
+        }
     }
     catch (error) {
     console.log(`Database connection error: ${error}`);

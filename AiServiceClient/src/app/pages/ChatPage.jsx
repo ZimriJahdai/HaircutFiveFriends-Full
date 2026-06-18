@@ -25,7 +25,7 @@ export default function ChatPage() {
   }, [loading]);
 
   return (
-    <section className="page">
+    <section className="page chat-page">
       <div className="page-head">
         <h1>Chat operativo</h1>
         <p>Gestiona conversaciones y herramientas de la barberia.</p>

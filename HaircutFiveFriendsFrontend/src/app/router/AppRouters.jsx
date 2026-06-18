@@ -16,6 +16,9 @@ import { Barberos } from '../../features/barber-client/pages/Barberos.jsx';
 import { Favoritos } from '../../features/favorites/pages/Favoritos.jsx';
 import { Perfil } from '../../features/client/pages/Perfil.jsx';
 
+import { ProductsAdmin } from '../../features/products/pages/ProductsAdmin.jsx';
+import { ProductsClient } from '../../features/products/pages/ProductsClient.jsx';
+import { ProbarCorte } from '../../features/ar-tryon/pages/ProbarCorte.jsx';
 
 // Componentes unificados (admin + cliente en uno solo)
 import { Services } from '../../features/services/pages/Services.jsx';
@@ -45,6 +48,7 @@ export const AppRoutes = () => {
         <Route path="haircut" element={<Haircut />} />
         <Route path="barberos" element={<Barber />} />
         <Route path="servicios" element={<Services />} />   {/* ← unificado */}
+        <Route path="productos" element={<ProductsAdmin />} />
         <Route path="resenas" element={<Reviews />} />       {/* ← unificado */}
         <Route path="clientes" element={<Client />} />
         <Route path="perfil" element={<Perfil />} />
@@ -64,10 +68,12 @@ export const AppRoutes = () => {
         <Route index element={<Home />} />
         <Route path="barberos" element={<Barberos />} />
         <Route path="servicios" element={<Services />} />   {/* ← unificado */}
+        <Route path="productos" element={<ProductsClient />} />
         <Route path="resenas" element={<Reviews />} />       {/* ← unificado */}
         <Route path="favoritos" element={<Favoritos />} />
         <Route path="perfil" element={<Perfil />} />
 
+        <Route path="probar-corte" element={<ProbarCorte />} />
       </Route>
     </Routes>
   );

@@ -6,6 +6,7 @@ import morgan from 'morgan';
 import multer from 'multer';
 import swaggerUi from 'swagger-ui-express';
 import { dbConnection } from './db.js';
+import { seedDatabase } from './seeder.js';
 import { corsOptions } from './cors-configuration.js';
 import { helmetConfiguration } from './helmet-configuration.js';
 import { swaggerSpec } from './swagger.js';
@@ -71,11 +72,12 @@ const routes = (app) => {
 
 export const initServer = async () => {
     const app = express();
-    const PORT = process.env.PORT;
+    const PORT = process.env.PORT || 3006;
     app.set('trust proxy', 1);
 
     try {
         await dbConnection();
+        await seedDatabase();
         middlewares(app);
         routes(app);
 

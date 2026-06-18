@@ -71,7 +71,30 @@ export const authorizeRoles = (...allowedRoles) => {
 export const attachClientFromToken = async (req, res, next) => {
     try {
         if (!req.userId) return next();
-        req.clientFromToken = await Client.findOne({ userId: req.userId });
+        
+        let client = await Client.findOne({ userId: req.userId });
+        
+        // Si el usuario es un cliente pero no tiene perfil en MongoDB, lo auto-creamos
+        if (!client && req.userRole === 'USER_ROLE') {
+            const name = req.auth?.name || req.auth?.Name || req.auth?.User?.Name || 'Cliente Autocreado';
+            const email = req.auth?.email || req.auth?.Email || req.auth?.User?.Email || 'correo@temp.com';
+            const phone = req.auth?.phone || req.auth?.Phone || req.auth?.User?.Phone || '00000000';
+            
+            console.log('attachClientFromToken | Auto-creando perfil de cliente en MongoDB:', email);
+            
+            client = await Client.create({
+                userId: req.userId,
+                name: name,
+                email: email,
+                phone: phone,
+                password: 'AutoCreatedPassword123!', // Contraseña dummy, la autenticación real ocurre en AuthService
+                status: true,
+                points: 0
+            });
+        }
+        
+        req.clientFromToken = client;
+        console.log('attachClientFromToken | req.userId:', req.userId, '| client found:', req.clientFromToken ? req.clientFromToken.name : 'null');
         next();
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });
