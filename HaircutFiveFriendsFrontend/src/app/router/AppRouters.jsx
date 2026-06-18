@@ -16,6 +16,7 @@ import { Barberos } from '../../features/barber-client/pages/Barberos.jsx';
 import { Favoritos } from '../../features/favorites/pages/Favoritos.jsx';
 import { ProductsAdmin } from '../../features/products/pages/ProductsAdmin.jsx';
 import { ProductsClient } from '../../features/products/pages/ProductsClient.jsx';
+import { ProbarCorte } from '../../features/ar-tryon/pages/ProbarCorte.jsx';
 
 // Componentes unificados (admin + cliente en uno solo)
 import { Services } from '../../features/services/pages/Services.jsx';
@@ -67,6 +68,7 @@ export const AppRoutes = () => {
         <Route path="productos" element={<ProductsClient />} />
         <Route path="resenas" element={<Reviews />} />       {/* ← unificado */}
         <Route path="favoritos" element={<Favoritos />} />
+        <Route path="probar-corte" element={<ProbarCorte />} />
       </Route>
     </Routes>
   );

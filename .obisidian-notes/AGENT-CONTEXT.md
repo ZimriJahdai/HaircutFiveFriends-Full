@@ -15,7 +15,8 @@ This is the definitive, up-to-date entry-point context file for AI Agents operat
 graph TD
     Client[HaircutFiveFriendsFrontend :5173] --> Auth[AuthService-The5FadeFriends :3005]
     Client --> Business[HaircutFiveFriends :3006]
-    AiClient[AiServiceClient :5174] --> AiServer[AiServiceServer :3007]
+    Client --> AiServer[AiServiceServer :3007]
+    AiClient[AiServiceClient :5174] --> AiServer
     AiServer --> Business
     
     Auth --> PostgreSQL[(PostgreSQL :5432)]
@@ -29,7 +30,7 @@ graph TD
 | **`AuthService-The5FadeFriends`** | `3005` | Auth & User Account Roles | Node.js (Express) | PostgreSQL (`HaircutFiveFriends` DB via Sequelize) |
 | **`HaircutFiveFriends`** | `3006` | Main Business Logic & Models | Node.js (Express) | MongoDB (`HaircutFiveFriends` DB via Mongoose) |
 | **`AiServiceServer`** | `3007` | AI Processing & Live WS Proxy | Node.js (Express) | MongoDB (`TodoGemini` / `GeminiDB` via Mongoose) & Vertex AI |
-| **`HaircutFiveFriendsFrontend`** | `5173` | Core Client Portal | React 19 + Vite | Connected to Ports `3005` and `3006` |
+| **`HaircutFiveFriendsFrontend`** | `5173` | Core Client Portal | React 19 + Vite | Connected to Ports `3005`, `3006` and `3007` (AR try-on `/client/probar-corte`) |
 | **`AiServiceClient`** | `5174` | Dedicated AI Voice & Chat client | React 19 + Vite | Connected to Port `3007` (HTTP + WS) |
 
 ---
