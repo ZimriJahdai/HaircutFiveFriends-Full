@@ -25,9 +25,10 @@ import { ProductsAdmin } from '../../features/products/pages/ProductsAdmin.jsx';
 import { ProductsClient } from '../../features/products/pages/ProductsClient.jsx';
 import { ProbarCorte } from '../../features/ar-tryon/pages/ProbarCorte.jsx';
 
-// Componentes unificados
-import { Services } from '../../features/services/pages/Services.jsx';
-import { Reviews } from '../../features/reviews/pages/Reviews.jsx';
+import { ServicesAdmin } from '../../features/services/pages/ServicesAdmin.jsx';
+import { ServicesClient } from '../../features/services/pages/ServicesClient.jsx';
+import { ReviewsAdmin } from '../../features/reviews/pages/ReviewsAdmin.jsx';
+import { ReviewsClient } from '../../features/reviews/pages/ReviewsClient.jsx';
 
 export const AppRoutes = () => {
   return (
@@ -55,9 +56,9 @@ export const AppRoutes = () => {
         <Route index element={<DashboardHome />} />
         <Route path="haircut" element={<Haircut />} />
         <Route path="barberos" element={<Barber />} />
-        <Route path="servicios" element={<Services />} />
+        <Route path="servicios" element={<ServicesAdmin />} />
         <Route path="productos" element={<ProductsAdmin />} />
-        <Route path="resenas" element={<Reviews />} />
+        <Route path="resenas" element={<ReviewsAdmin />} />
         <Route path="clientes" element={<Client />} />
         <Route path="perfil" element={<Perfil />} />
       </Route>
@@ -77,9 +78,9 @@ export const AppRoutes = () => {
       >
         <Route index element={<Home />} />
         <Route path="barberos" element={<Barberos />} />
-        <Route path="servicios" element={<Services />} />
+        <Route path="servicios" element={<ServicesClient />} />
         <Route path="productos" element={<ProductsClient />} />
-        <Route path="resenas" element={<Reviews />} />
+        <Route path="resenas" element={<ReviewsClient />} />
         <Route path="favoritos" element={<Favoritos />} />
         <Route path="probar-corte" element={<ProbarCorte />} />
         <Route path="perfil" element={<Perfil />} />
