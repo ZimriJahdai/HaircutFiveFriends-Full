@@ -29,6 +29,8 @@ import { ServicesAdmin } from '../../features/services/pages/ServicesAdmin.jsx';
 import { ServicesClient } from '../../features/services/pages/ServicesClient.jsx';
 import { ReviewsAdmin } from '../../features/reviews/pages/ReviewsAdmin.jsx';
 import { ReviewsClient } from '../../features/reviews/pages/ReviewsClient.jsx';
+import { SalesAdmin } from '../../features/sales/pages/SalesAdmin.jsx';
+import { SalesClient } from '../../features/sales/pages/SalesClient.jsx';
 
 export const AppRoutes = () => {
   return (
@@ -59,6 +61,7 @@ export const AppRoutes = () => {
         <Route path="servicios" element={<ServicesAdmin />} />
         <Route path="productos" element={<ProductsAdmin />} />
         <Route path="resenas" element={<ReviewsAdmin />} />
+        <Route path="ventas" element={<SalesAdmin />} />
         <Route path="clientes" element={<Client />} />
         <Route path="perfil" element={<Perfil />} />
       </Route>
@@ -82,6 +85,7 @@ export const AppRoutes = () => {
         <Route path="productos" element={<ProductsClient />} />
         <Route path="resenas" element={<ReviewsClient />} />
         <Route path="favoritos" element={<Favoritos />} />
+        <Route path="compras" element={<SalesClient />} />
         <Route path="probar-corte" element={<ProbarCorte />} />
         <Route path="perfil" element={<Perfil />} />
       </Route>

@@ -1,11 +1,46 @@
 'use strict'
 
+import mongoose from 'mongoose'
 import Sale from './sale.model.js'
 import Detail from '../detailSale/detail.model.js'
 import Product from '../product/product.model.js'
 import Service from '../service/service.model.js'
 import Client from '../client/client.model.js'
 import increasePointsForSale from '../../middlewares/pointPerSale.js'
+
+// Adjunta el nombre del producto/servicio a cada detalle (referenceId no tiene ref directa)
+const enrichSales = async (sales) => {
+    const productIds = new Set()
+    const serviceIds = new Set()
+
+    for (const sale of sales) {
+        for (const detail of (sale.detailId || [])) {
+            if (!detail || !detail.referenceId) continue
+            const refId = detail.referenceId.toString()
+            if (detail.detailType === 'PRODUCT') productIds.add(refId)
+            else if (detail.detailType === 'SERVICE') serviceIds.add(refId)
+        }
+    }
+
+    const [products, services] = await Promise.all([
+        Product.find({ _id: { $in: [...productIds] } }).select('name').lean(),
+        Service.find({ _id: { $in: [...serviceIds] } }).select('name').lean(),
+    ])
+
+    const nameMap = {}
+    products.forEach((p) => { nameMap[p._id.toString()] = p.name })
+    services.forEach((s) => { nameMap[s._id.toString()] = s.name })
+
+    for (const sale of sales) {
+        for (const detail of (sale.detailId || [])) {
+            if (!detail || !detail.referenceId) continue
+            const refId = detail.referenceId.toString()
+            detail.referenceId = { _id: refId, name: nameMap[refId] || null }
+        }
+    }
+
+    return sales
+}
 
 export const createSale = async (req, res) => {
     try {
@@ -47,22 +82,29 @@ export const createSale = async (req, res) => {
             return [input]
         }
 
-        if (!saleData.clientId && req.user && req.user.uid) {
-            saleData.clientId = req.user.uid
-        }
-
         if (typeof saleData.clientId === 'string') {
             saleData.clientId = saleData.clientId.replace(/[,\s]+$/g, '').trim()
         }
 
-        const detailIds = normalizeDetailIds(saleData.detailId)
-        saleData.detailId = detailIds
-
-        // Obtener información del cliente para verificar puntos
-        const client = await Client.findById(saleData.clientId)
+        // Resolver el cliente aceptando el _id de Mongo, el userId de auth o el token
+        let client = null
+        const rawClientId = saleData.clientId
+        if (rawClientId && mongoose.Types.ObjectId.isValid(rawClientId)) {
+            client = await Client.findById(rawClientId)
+        }
+        if (!client && rawClientId) {
+            client = await Client.findOne({ userId: rawClientId })
+        }
+        if (!client && req.userId) {
+            client = await Client.findOne({ userId: req.userId })
+        }
         if (!client) {
             return res.status(404).json({ success: false, message: 'Cliente no encontrado' })
         }
+        saleData.clientId = client._id
+
+        const detailIds = normalizeDetailIds(saleData.detailId)
+        saleData.detailId = detailIds
 
         // Mapa de items que se pagarán con puntos (viene del request)
         // Formato: { detailId: true/false }
@@ -223,9 +265,10 @@ export const createSale = async (req, res) => {
 export const getSales = async (req, res) => {
     try {
         const sales = await Sale.find()
-            .populate('clientId')
+            .populate('clientId', 'name email phone points')
             .populate('detailId')
-        return res.status(200).json({ success: true, sales })
+            .lean()
+        return res.status(200).json({ success: true, sales: await enrichSales(sales) })
     } catch (err) {
         console.error(err)
         return res.status(500).json({ success: false, message: 'Error getting sales', err })
@@ -234,15 +277,22 @@ export const getSales = async (req, res) => {
 
 export const getMySales = async (req, res) => {
     try {
-        const clientId = req.user && req.user.uid
-        if (!clientId) {
+        const userId = req.userId
+        if (!userId) {
             return res.status(401).json({ success: false, message: 'Unauthorized' })
         }
 
-        const sales = await Sale.find({ clientId })
-            .populate('clientId')
+        // El token trae el id de auth; el cliente de Mongo se vincula por userId
+        const client = await Client.findOne({ userId })
+        if (!client) {
+            return res.status(200).json({ success: true, sales: [] })
+        }
+
+        const sales = await Sale.find({ clientId: client._id })
+            .populate('clientId', 'name email phone points')
             .populate('detailId')
-        return res.status(200).json({ success: true, sales })
+            .lean()
+        return res.status(200).json({ success: true, sales: await enrichSales(sales) })
 
     } catch (err) {
         console.error(err)
@@ -254,12 +304,14 @@ export const getSaleById = async (req, res) => {
     try {
         const { id } = req.params
         const sale = await Sale.findById(id)
-            .populate('clientId')
+            .populate('clientId', 'name email phone points')
             .populate('detailId')
+            .lean()
         if (!sale) {
             return res.status(404).json({ success: false, message: 'Sale not found' })
         }
-        return res.status(200).json({ success: true, sale })
+        const [enriched] = await enrichSales([sale])
+        return res.status(200).json({ success: true, sale: enriched })
     } catch (err) {
         console.error(err)
         return res.status(500).json({ success: false, message: 'Error getting sale', err })
