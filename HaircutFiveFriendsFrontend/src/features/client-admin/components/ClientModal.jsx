@@ -96,7 +96,12 @@ export const ClientModal = ({ editing, onClose, onSuccess }) => {
       await saveClient(form, editing?._id ?? null);
       onSuccess(editing ? 'Cliente actualizado exitosamente' : 'Cliente creado exitosamente');
     } catch (err) {
-      setLocalError(err.response?.data?.message || err.message || 'Error al guardar el cliente');
+      const data = err.response?.data;
+      if (data?.errors?.length > 0) {
+        setLocalError(data.errors.map((e) => `• ${e.msg}`).join('\n'));
+      } else {
+        setLocalError(data?.message || err.message || 'Error al guardar el cliente');
+      }
     } finally {
       setSubmitting(false);
     }

@@ -19,6 +19,8 @@ import { ClientHome } from '../pages/ClientHome.jsx';
 import { Home } from '../../features/client/pages/Home.jsx';
 import { Barberos } from '../../features/barber-client/pages/Barberos.jsx';
 import { Favoritos } from '../../features/favorites/pages/Favoritos.jsx';
+import { Perfil } from '../../features/client/pages/Perfil.jsx';
+
 import { ProductsAdmin } from '../../features/products/pages/ProductsAdmin.jsx';
 import { ProductsClient } from '../../features/products/pages/ProductsClient.jsx';
 import { ProbarCorte } from '../../features/ar-tryon/pages/ProbarCorte.jsx';
@@ -44,7 +46,7 @@ export const AppRoutes = () => {
         path="/dashboard"
         element={
           <ProtectedRoute>
-            <RoleGuard allowedRoles={['ADMIN_ROLE']}>
+            <RoleGuard allowedRoles={['ADMIN_ROLE', 'EMPLOYEE_ROLE']}>
               <DashboardLayout />
             </RoleGuard>
           </ProtectedRoute>
@@ -57,6 +59,7 @@ export const AppRoutes = () => {
         <Route path="productos" element={<ProductsAdmin />} />
         <Route path="resenas" element={<Reviews />} />
         <Route path="clientes" element={<Client />} />
+        <Route path="perfil" element={<Perfil />} />
       </Route>
 
       {/* =========================
@@ -78,6 +81,7 @@ export const AppRoutes = () => {
         <Route path="productos" element={<ProductsClient />} />
         <Route path="resenas" element={<Reviews />} />
         <Route path="favoritos" element={<Favoritos />} />
+        <Route path="perfil" element={<Perfil />} />
         <Route path="probar-corte" element={<ProbarCorte />} />
       </Route>
     </Routes>

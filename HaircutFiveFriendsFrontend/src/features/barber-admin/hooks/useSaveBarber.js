@@ -13,6 +13,14 @@ export const useSaveBarber = () => {
     }
     formData.append("phone", data.phone);
     formData.append("status", data.status ? "true" : "false");
+
+    const scheduleArr = Object.entries(data.schedule || {})
+      .filter(([, v]) => v.active)
+      .map(([day, v]) => ({ days: day, hours: `${v.start} - ${v.end}` }));
+    if (scheduleArr.length > 0) {
+      formData.append("schedule", JSON.stringify(scheduleArr));
+    }
+
     if (data.profilePicture) {
       formData.append("profilePicture", data.profilePicture);
     }

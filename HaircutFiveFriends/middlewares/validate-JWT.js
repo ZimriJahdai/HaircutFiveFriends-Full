@@ -74,6 +74,21 @@ export const attachClientFromToken = async (req, res, next) => {
 
         let client = await Client.findOne({ userId: req.userId });
 
+        if (!client && req.auth?.email) {
+            client = await Client.findOne({ email: req.auth.email.toLowerCase() });
+        }
+
+        if (!client && req.auth?.email) {
+            client = await Client.create({
+                userId: req.userId,
+                name: req.auth.name || req.auth.email.split('@')[0] || 'Cliente',
+                email: req.auth.email.toLowerCase(),
+                phone: req.auth.phone || '00000000',
+                password: Math.random().toString(36).slice(2),
+            });
+        }
+
+        req.clientFromToken = client || null;
         // If not found by userId, try finding by email
         const email = (req.auth?.email || req.auth?.Email || req.auth?.User?.Email || req.auth?.email || '').toLowerCase();
         if (!client && email) {

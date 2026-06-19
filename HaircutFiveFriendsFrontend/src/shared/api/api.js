@@ -18,7 +18,7 @@ const axiosAdmin = axios.create({
 });
 
 axiosAuth.interceptors.request.use((config) => {
-    //config._axiosClient = "auth";
+    config._axiosClient = "auth";
     const token = useAuthStore.getState().token;
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
@@ -27,7 +27,7 @@ axiosAuth.interceptors.request.use((config) => {
 });
 
 axiosAdmin.interceptors.request.use((config) => {
-    //config._axiosClient = "admin";
+    config._axiosClient = "admin";
     const token = useAuthStore.getState().token;
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;

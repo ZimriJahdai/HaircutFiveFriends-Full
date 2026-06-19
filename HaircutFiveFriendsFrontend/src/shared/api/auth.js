@@ -103,4 +103,18 @@ export const authService = {
       throw parseError(error);
     }
   },
+
+  updateProfile: async (token, data) => {
+    requireAuthUrl();
+    try {
+      const response = await authClient.put('/api/v1/users/profile', data, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw parseError(error);
+    }
+  },
 };

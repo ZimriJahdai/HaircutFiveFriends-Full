@@ -10,6 +10,7 @@ import { dbConnection } from './db.js';
 import '../src/users/user.model.js';
 import '../src/auth/role.model.js';
 import '../src/auth/signup-request.model.js';
+import '../src/barbers/barber.model.js';
 import { requestLimit } from '../middlewares/request-limit.js';
 import { corsOptions } from './cors-configuration.js';
 import { helmetConfiguration } from './helmet-configuration.js';
@@ -19,6 +20,7 @@ import {
 } from '../middlewares/server-genericError-handler.js';
 import authRoutes from '../src/auth/auth.routes.js';
 import userRoutes from '../src/users/user.routes.js';
+import barberRoutes from '../src/barbers/barber.routes.js';
 import { swaggerSpec } from './swagger.js';
 
 const BASE_PATH = '/api/v1';
@@ -35,6 +37,7 @@ const middlewares = (app) => {
 const routes = (app) => {
   app.use(`${BASE_PATH}/auth`, authRoutes);
   app.use(`${BASE_PATH}/users`, userRoutes);
+  app.use(`${BASE_PATH}/barbers`, barberRoutes);
 
   app.get(`${BASE_PATH}/health`, (req, res) => {
     res.status(200).json({

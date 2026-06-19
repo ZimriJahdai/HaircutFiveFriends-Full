@@ -1,10 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import NavbarClient from '../../client/components/NavbarClient.jsx';
 import { FavoritesHeader } from '../components/FavoritesHeader.jsx';
 import { FavoritesEmptyState } from '../components/FavoritesEmptyState.jsx';
 import { FavoriteCard } from '../components/FavoriteCard.jsx';
 import { useFavorites } from '../hooks/useFavorites.js';
 import { ConfirmModal } from '../components/ConfirmModal.jsx';
+import { getAllReviews } from '../../../shared/api/review';
 
 const TABS = [
   { id: 'ALL', label: 'Todos', icon: 'ti-apps' },
@@ -14,8 +15,44 @@ const TABS = [
   { id: 'BARBER', label: 'Barberos', icon: 'ti-user' }
 ];
 
+const useReviewStats = (barbers) => {
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getAllReviews()
+      .then((res) => setReviews(res.data || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const statsMap = useMemo(() => {
+    const map = {};
+    for (const barber of barbers) {
+      const barberId = barber._id || barber.id;
+      const barberReviews = reviews.filter(
+        (r) => (r.barberoId?._id || r.barberoId) === barberId
+      );
+      const total = barberReviews.length;
+      const avg = total
+        ? (barberReviews.reduce((s, r) => s + r.score, 0) / total).toFixed(1)
+        : null;
+      map[barberId] = { total, average: avg };
+    }
+    return map;
+  }, [reviews, barbers]);
+
+  return { statsMap, loading };
+};
+
 export const Favoritos = () => {
   const { favorites, loading, fetched, clearFavorites } = useFavorites();
+
+  const barbers = useMemo(
+    () => favorites.filter((f) => f.typeFavorite === 'BARBER').map((f) => f.referenceId).filter(Boolean),
+    [favorites]
+  );
+  const { statsMap } = useReviewStats(barbers);
   const [activeTab, setActiveTab] = useState('ALL');
   const [query, setQuery] = useState('');
   const [showConfirm, setShowConfirm] = useState(false);
@@ -149,7 +186,7 @@ export const Favoritos = () => {
             {/* Favorites Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
               {filtered.map((fav) => (
-                <FavoriteCard key={fav._id} favorite={fav} />
+                <FavoriteCard key={fav._id} favorite={fav} reviewStatsMap={statsMap} />
               ))}
             </div>
           </>

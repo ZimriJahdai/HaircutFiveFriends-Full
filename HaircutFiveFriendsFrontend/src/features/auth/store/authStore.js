@@ -5,8 +5,7 @@ import { authService } from '../../../shared/api/auth.js';
 const ALLOWED_ROLES = [
   'ADMIN_ROLE',
   'USER_ROLE',
-  'ADMIN_RESTAURANTE',
-  'ADMIN_RESTAURANT',
+  'EMPLOYEE_ROLE',
 ];
 
 const initialState = {
@@ -58,16 +57,19 @@ export const useAuthStore = create(
             throw new Error(response?.message || 'Error al iniciar sesión');
           }
 
-          const user = response.userDetails || response.user || null;
-          const role = user?.role;
+          const token = response.token;
+          const role = (response.userDetails || response.user)?.role;
 
           if (!ALLOWED_ROLES.includes(role)) {
             throw new Error(`Rol no autorizado: ${role}`);
           }
+          set({ token });
+          const profileResponse = await authService.getProfile(token);
+          const user = profileResponse?.data || response.userDetails || response.user;
 
           set({
             user,
-            token: response.token,
+            token,
             expiresAt: response.expiresAt ? new Date(response.expiresAt).toISOString() : null,
             refreshToken: response.refreshToken || null,
             isAuthenticated: true,

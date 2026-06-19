@@ -1,6 +1,9 @@
+import { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { AvatarUser } from '../../../shared/components/ui/AvatarUser.jsx';
 import { useFavoritesStore } from '../../favorites/store/useFavoritesStore.js';
+import { useCartStore } from '../../cart/store/cartStore.js';
+import { CartModal } from '../../cart/components/CartModal.jsx';
 
 const CLIENT_MENU_ITEMS = [
   { label: 'Mi Perfil', to: '/client/perfil', icon: 'ti-user-circle' },
@@ -8,6 +11,8 @@ const CLIENT_MENU_ITEMS = [
 
 export default function NavbarClient() {
   const favCount = useFavoritesStore((s) => s.favoriteIds.length);
+  const cartCount = useCartStore((s) => s.items.reduce((sum, i) => sum + i.quantity, 0));
+  const [cartOpen, setCartOpen] = useState(false);
 
   const navLinkClass = ({ isActive }) =>
     `flex items-center gap-2 px-5 py-3 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-300 ${isActive
@@ -16,83 +21,100 @@ export default function NavbarClient() {
     }`;
 
   return (
-    <header className="sticky top-0 z-50 bg-[#070707]/95 backdrop-blur-xl border-b border-white/5">
-      <div className="max-w-[1400px] mx-auto px-6 h-22 flex items-center justify-between">
+    <>
+      <header className="sticky top-0 z-50 bg-[#070707]/95 backdrop-blur-xl border-b border-white/5">
+        <div className="max-w-[1400px] mx-auto px-6 h-22 flex items-center justify-between">
 
-        {/* Logo */}
-        <Link
-          to="/client"
-          className="flex items-center gap-3 group"
-        >
-          <div>
-            <h1 className="font-['Bebas_Neue'] text-3xl leading-none tracking-wider text-white">
-              HAIRCUT
-            </h1>
-            <p className="text-[10px] tracking-[4px] text-zinc-500">
-              FIVE FRIENDS
-            </p>
+          {/* Logo */}
+          <Link
+            to="/client"
+            className="flex items-center gap-3 group"
+          >
+            <div>
+              <h1 className="font-['Bebas_Neue'] text-3xl leading-none tracking-wider text-white">
+                HAIRCUT
+              </h1>
+              <p className="text-[10px] tracking-[4px] text-zinc-500">
+                FIVE FRIENDS
+              </p>
+            </div>
+          </Link>
+
+          {/* Navigation */}
+          <nav className="hidden lg:flex items-center bg-white/[0.03] border border-white/5 rounded-2xl px-3 py-2">
+
+            <NavLink to="/client" end className={navLinkClass}>
+              <i className="ti ti-home text-base" />
+              Inicio
+            </NavLink>
+
+            <NavLink to="/client/servicios" className={navLinkClass}>
+              <i className="ti ti-cut text-base" />
+              Servicios
+            </NavLink>
+
+            <NavLink to="/client/barberos" className={navLinkClass}>
+              <i className="ti ti-user text-base" />
+              Barberos
+            </NavLink>
+
+            <NavLink to="/client/productos" className={navLinkClass}>
+              <i className="ti ti-package text-base" />
+              Productos
+            </NavLink>
+
+            <NavLink to="/client/probar-corte" className={navLinkClass}>
+              <i className="ti ti-camera text-base" />
+              Probar corte
+            </NavLink>
+
+            <NavLink to="/client/galeria" className={navLinkClass}>
+              <i className="ti ti-photo text-base" />
+              Estilos
+            </NavLink>
+
+            <NavLink to="/client/favoritos" className={navLinkClass}>
+              <i className="ti ti-heart text-base" />
+              Favoritos
+              {favCount > 0 && (
+                <span className="ml-0.5 flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-[#00D2C4] text-[#0A0A0A] text-[10px] font-black px-1">
+                  {favCount > 99 ? '99+' : favCount}
+                </span>
+              )}
+            </NavLink>
+
+            <NavLink to="/client/resenas" className={navLinkClass}>
+              <i className="ti ti-star text-base" />
+              Reseñas
+            </NavLink>
+
+            <NavLink to="/client/reservar" className={navLinkClass}>
+              <i className="ti ti-calendar-event text-base" />
+              Reservar
+            </NavLink>
+
+          </nav>
+
+          {/* Right side: Cart + Avatar */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setCartOpen(true)}
+              className="relative w-10 h-10 rounded-full bg-white/[0.04] border border-white/10 flex items-center justify-center text-zinc-400 hover:text-white hover:border-[#00D2C4]/30 hover:bg-[#00D2C4]/5 transition-all duration-200 cursor-pointer"
+            >
+              <i className="ti ti-shopping-cart text-lg" />
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-[#00D2C4] text-[#0A0A0A] text-[10px] font-black px-1 shadow-[0_2px_8px_rgba(0,210,196,0.4)]">
+                  {cartCount > 99 ? '99+' : cartCount}
+                </span>
+              )}
+            </button>
+            <AvatarUser dark menuItems={CLIENT_MENU_ITEMS} />
           </div>
-        </Link>
 
-        {/* Navigation */}
-        <nav className="hidden lg:flex items-center bg-white/[0.03] border border-white/5 rounded-2xl px-3 py-2">
+        </div>
+      </header>
 
-          <NavLink to="/client" end className={navLinkClass}>
-            <i className="ti ti-home text-base" />
-            Inicio
-          </NavLink>
-
-          <NavLink to="/client/servicios" className={navLinkClass}>
-            <i className="ti ti-cut text-base" />
-            Servicios
-          </NavLink>
-
-          <NavLink to="/client/barberos" className={navLinkClass}>
-            <i className="ti ti-user text-base" />
-            Barberos
-          </NavLink>
-
-          <NavLink to="/client/productos" className={navLinkClass}>
-            <i className="ti ti-package text-base" />
-            Productos
-          </NavLink>
-
-          <NavLink to="/client/probar-corte" className={navLinkClass}>
-            <i className="ti ti-camera text-base" />
-            Probar corte
-          </NavLink>
-
-          <NavLink to="/client/galeria" className={navLinkClass}>
-            <i className="ti ti-photo text-base" />
-            Estilos
-          </NavLink>
-
-          <NavLink to="/client/favoritos" className={navLinkClass}>
-            <i className="ti ti-heart text-base" />
-            Favoritos
-            {favCount > 0 && (
-              <span className="ml-0.5 flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-[#00D2C4] text-[#0A0A0A] text-[10px] font-black px-1">
-                {favCount > 99 ? '99+' : favCount}
-              </span>
-            )}
-          </NavLink>
-
-          <NavLink to="/client/resenas" className={navLinkClass}>
-            <i className="ti ti-star text-base" />
-            Reseñas
-          </NavLink>
-
-          <NavLink to="/client/reservar" className={navLinkClass}>
-            <i className="ti ti-calendar-event text-base" />
-            Reservar
-          </NavLink>
-
-        </nav>
-
-        {/* Profile Avatar */}
-        <AvatarUser dark menuItems={CLIENT_MENU_ITEMS} />
-
-      </div>
-    </header>
+      {cartOpen && <CartModal onClose={() => setCartOpen(false)} />}
+    </>
   );
 }

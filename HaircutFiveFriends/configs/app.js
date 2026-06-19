@@ -24,8 +24,6 @@ import invoiceRoutes from '../src/invoice/invoice.routes.js';
 import statisticsRoutes from '../src/statistics/statistics.routes.js';
 import productRoutes from '../src/product/product.routes.js';
 
-// ── AI Haircut (integrado desde The5FadeFriends) ──────────────────────────────
-
 const BASE_PATH = '/HaircutFiveFriends/api/v1';
 
 const middlewares = (app) => {
@@ -59,7 +57,6 @@ const routes = (app) => {
     app.use(`${BASE_PATH}/invoice`,       invoiceRoutes);
     app.use(`${BASE_PATH}/statistics`,    statisticsRoutes);
     app.use(`${BASE_PATH}/products`,      productRoutes);
-
 
     // ── Swagger ───────────────────────────────────────────────────────────────
     app.use(`${BASE_PATH}/api-docs`, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
