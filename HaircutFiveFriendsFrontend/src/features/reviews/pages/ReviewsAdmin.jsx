@@ -30,7 +30,7 @@ export const ReviewsAdmin = () => {
       <div className="h-[1px] bg-[#C9A84C]/20 mb-6" />
 
       {error && (
-        <div style={{ background: '#2A1515', border: '1px solid #5A2020', color: '#E88', padding: '12px', borderRadius: '8px', marginBottom: '15px' }}>
+        <div className="bg-[#2A1515] border border-[#5A2020] text-[#E88] px-3.5 py-3 rounded-lg mb-4">
           {error}
         </div>
       )}
@@ -40,12 +40,12 @@ export const ReviewsAdmin = () => {
       ) : (
         <>
           <ReviewsStats reviews={reviews} isAdmin />
-          <ReviewsCharts reviews={reviews} />
+          <ReviewsCharts reviews={filteredReviews} filterType={filter} />
           <ReviewsFilter filter={filter} setFilter={setFilter} total={filteredReviews.length} />
           {filteredReviews.length === 0 ? (
             <ReviewEmptyState icon="ti-message-off" message="No hay reseñas con este filtro." />
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div className="flex flex-col gap-[10px]">
               {filteredReviews.map(review => <ReviewCard key={review._id} review={review} isAdmin />)}
             </div>
           )}

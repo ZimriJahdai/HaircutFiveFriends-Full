@@ -1,120 +1,63 @@
-import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../../features/auth/store/authStore.js';
 
 const NAV_CONFIG = {
   ADMIN_ROLE: [
-    { label: 'Inicio',             icon: 'ti-home',       to: '/dashboard' },
-    { label: 'Cortes de cabello',  icon: 'ti-scissors',   to: '/dashboard/haircut' },
-    { label: 'Productos',          icon: 'ti-package',    to: '/dashboard/productos' },
-    { label: 'Citas',              icon: 'ti-calendar',   to: '/dashboard/citas' },
-    { label: 'Clientes',           icon: 'ti-users',      to: '/dashboard/clientes' },
-    { label: 'Barberos',           icon: 'ti-id-badge',   to: '/dashboard/barberos' },
-    { label: 'Reportes',           icon: 'ti-chart-bar',  to: '/dashboard/reportes' },
+    { label: 'Inicio', icon: 'ti-home', to: '/dashboard' },
+    { label: 'Cortes de cabello', icon: 'ti-scissors', to: '/dashboard/haircut' },
+    { label: 'Productos', icon: 'ti-package', to: '/dashboard/productos' },
+    { label: 'Citas', icon: 'ti-calendar', to: '/dashboard/citas' },
+    { label: 'Clientes', icon: 'ti-users', to: '/dashboard/clientes' },
+    { label: 'Barberos', icon: 'ti-id-badge', to: '/dashboard/barberos' },
+    { label: 'Reportes', icon: 'ti-chart-bar', to: '/dashboard/reportes' },
     { type: 'section', label: 'Servicios' },
-    { label: 'Servicios',          icon: 'ti-scissors',   to: '/dashboard/servicios' },
-    { label: 'Reseñas',            icon: 'ti-star',       to: '/dashboard/resenas' },
+    { label: 'Servicios', icon: 'ti-scissors', to: '/dashboard/servicios' },
+    { label: 'Reseñas', icon: 'ti-star', to: '/dashboard/resenas' },
     { type: 'section', label: 'Cuenta' },
   ],
   USER_ROLE: [
-    { label: 'Inicio',             icon: 'ti-home',           to: '/client' },
-    { label: 'Reservar cita',      icon: 'ti-calendar-plus',  to: '/client/reservar', badge: 'Nuevo' },
-    { label: 'Productos',          icon: 'ti-package',        to: '/client/productos' },
-    { label: 'Mis citas',          icon: 'ti-calendar',       to: '/client/citas' },
+    { label: 'Inicio', icon: 'ti-home', to: '/client' },
+    { label: 'Reservar cita', icon: 'ti-calendar-plus', to: '/client/reservar', badge: 'Nuevo' },
+    { label: 'Productos', icon: 'ti-package', to: '/client/productos' },
+    { label: 'Mis citas', icon: 'ti-calendar', to: '/client/citas' },
     { type: 'section', label: 'Cuenta' },
-    { label: 'Mi perfil',          icon: 'ti-user-circle',    to: '/client/perfil' },
-    { label: 'Servicios',          icon: 'ti-scissors',       to: '/client/servicios' },
-    { label: 'Reseñas',            icon: 'ti-star',           to: '/client/resenas' },
-    { label: 'Notificaciones',     icon: 'ti-bell',           to: '/client/notificaciones' },
+    { label: 'Mi perfil', icon: 'ti-user-circle', to: '/client/perfil' },
+    { label: 'Servicios', icon: 'ti-scissors', to: '/client/servicios' },
+    { label: 'Reseñas', icon: 'ti-star', to: '/client/resenas' },
+    { label: 'Notificaciones', icon: 'ti-bell', to: '/client/notificaciones' },
   ],
 };
 
-const s = {
-  sidebar: (collapsed) => ({
-    width: collapsed ? '60px' : '220px',
-    background: '#111',
-    borderRight: '1px solid #1E1E1E',
-    display: 'flex',
-    flexDirection: 'column',
-    height: '100vh',
-    flexShrink: 0,
-    transition: 'width 0.25s ease',
-    overflow: 'hidden',
-    fontFamily: "'Inter', sans-serif",
-  }),
-  brand: {
-    display: 'flex', alignItems: 'center', gap: '10px',
-    padding: '18px 14px', borderBottom: '1px solid #1E1E1E',
-    whiteSpace: 'nowrap', overflow: 'hidden',
-  },
-  logo: {
-    width: '32px', height: '32px', background: '#C9A84C', borderRadius: '6px',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: '16px', color: '#0A0A0A', flexShrink: 0,
-  },
-  brandName: {
-    fontFamily: "'Bebas Neue', sans-serif", fontSize: '18px',
-    letterSpacing: '2px', color: '#E8E4DC', lineHeight: 1,
-  },
-  brandSub: { fontSize: '10px', color: '#444', letterSpacing: '1px', textTransform: 'uppercase' },
-  sectionLabel: (collapsed) => ({
-    padding: '10px 14px 4px', fontSize: '9px', letterSpacing: '2px',
-    textTransform: 'uppercase', color: '#333', whiteSpace: 'nowrap',
-    opacity: collapsed ? 0 : 1, transition: 'opacity 0.2s',
-  }),
-  nav: { flex: 1, padding: '6px 8px', overflow: 'hidden' },
-  item: (active, hovered) => ({
-    display: 'flex', alignItems: 'center', gap: '10px',
-    padding: '9px 10px', borderRadius: '6px', cursor: 'pointer',
-    fontSize: '13px', whiteSpace: 'nowrap', marginBottom: '2px',
-    overflow: 'hidden', textDecoration: 'none',
-    background: active ? '#C9A84C18' : hovered ? '#1A1A1A' : 'transparent',
-    color: active ? '#FFFFFF' : hovered ? '#E8E4DC' : '#666',
-    transition: 'background 0.15s, color 0.15s',
-  }),
-  itemIcon: { fontSize: '18px', flexShrink: 0 },
-  itemLabel: (collapsed) => ({ display: collapsed ? 'none' : 'block' }),
-  badge: (collapsed) => ({
-    display: collapsed ? 'none' : 'block', marginLeft: 'auto',
-    background: '#C9A84C', color: '#0A0A0A', fontSize: '10px',
-    fontWeight: 500, padding: '1px 6px', borderRadius: '10px', flexShrink: 0,
-  }),
-  foot: { borderTop: '1px solid #1E1E1E', padding: '10px 8px' },
-  logoutBtn: (hovered, collapsed) => ({
-    display: 'flex', alignItems: 'center', gap: '10px',
-    padding: '9px 10px', borderRadius: '6px', cursor: 'pointer',
-    border: 'none', width: '100%', whiteSpace: 'nowrap', overflow: 'hidden',
-    background: hovered ? '#2A1515' : 'transparent',
-    color: hovered ? '#E87878' : '#555',
-    transition: 'background 0.15s, color 0.15s', fontSize: '13px',
-    fontFamily: "'Inter', sans-serif",
-  }),
-};
-
 function NavItem({ item, collapsed }) {
-  const [hovered, setHovered] = useState(false);
   return (
     <NavLink
       to={item.to}
       end={item.to.split('/').length <= 2}
-      style={({ isActive }) => s.item(isActive, hovered)}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      className={({ isActive }) =>
+        `flex items-center gap-[10px] px-[10px] py-[9px] rounded-[6px] cursor-pointer text-[13px] whitespace-nowrap mb-[2px] overflow-hidden no-underline transition-colors duration-150 ${
+          isActive
+            ? 'bg-[#C9A84C18] text-white'
+            : 'bg-transparent text-[#666] hover:bg-[#1A1A1A] hover:text-[#E8E4DC]'
+        }`
+      }
     >
-      <i className={`ti ${item.icon}`} style={s.itemIcon} aria-hidden="true" />
-      <span style={s.itemLabel(collapsed)}>{item.label}</span>
-      {item.badge && <span style={s.badge(collapsed)}>{item.badge}</span>}
+      <i className={`ti ${item.icon} text-lg shrink-0`} aria-hidden="true" />
+      <span className={collapsed ? 'hidden' : 'block'}>{item.label}</span>
+      {item.badge && (
+        <span className={`ml-auto bg-[#C9A84C] text-[#0A0A0A] text-[10px] font-medium px-[6px] py-[1px] rounded-[10px] shrink-0 ${collapsed ? 'hidden' : 'block'}`}>
+          {item.badge}
+        </span>
+      )}
     </NavLink>
   );
 }
 
 export default function Sidebar({ collapsed }) {
-  const user    = useAuthStore((state) => state.user);
-  const logout  = useAuthStore((state) => state.logout);
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
   const navigate = useNavigate();
-  const [logoutHovered, setLogoutHovered] = useState(false);
 
-  const role     = user?.role || 'USER_ROLE';
+  const role = user?.role || 'USER_ROLE';
   const navItems = NAV_CONFIG[role] || NAV_CONFIG.USER_ROLE;
 
   const handleLogout = () => {
@@ -123,44 +66,53 @@ export default function Sidebar({ collapsed }) {
   };
 
   return (
-    <aside style={s.sidebar(collapsed)}>
+    <aside
+      className={`bg-[#111] border-r border-[#1E1E1E] flex flex-col h-screen shrink-0 overflow-hidden transition-[width] duration-[250ms] font-sans ${
+        collapsed ? 'w-[60px]' : 'w-[220px]'
+      }`}
+    >
       <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
 
       {/* Brand */}
-      <div style={s.brand}>
-        <div style={s.logo}>
+      <div className="flex items-center gap-[10px] px-[14px] py-[18px] border-b border-[#1E1E1E] whitespace-nowrap overflow-hidden">
+        <div className="w-8 h-8 bg-[#C9A84C] rounded-[6px] flex items-center justify-center text-base text-[#0A0A0A] shrink-0">
           <i className="ti ti-scissors" aria-hidden="true" />
         </div>
         <div>
-          <div style={s.brandName}>Five Friends</div>
-          <div style={s.brandSub}>Barbería</div>
+          <div className="font-['Bebas_Neue',sans-serif] text-lg tracking-[2px] text-[#E8E4DC] leading-none">Five Friends</div>
+          <div className="text-[10px] text-[#444] tracking-[1px] uppercase">Barbería</div>
         </div>
       </div>
 
       {/* Nav items */}
-      <nav style={s.nav}>
+      <nav className="flex-1 px-2 py-[6px] overflow-hidden">
         {navItems.map((item, i) =>
           item.type === 'section' ? (
-            <div key={i} style={s.sectionLabel(collapsed)}>{item.label}</div>
+            <div
+              key={i}
+              className={`px-[14px] pt-[10px] pb-1 text-[9px] tracking-[2px] uppercase text-[#333] whitespace-nowrap transition-opacity duration-200 ${
+                collapsed ? 'opacity-0' : 'opacity-100'
+              }`}
+            >
+              {item.label}
+            </div>
           ) : (
             <NavItem key={item.to} item={item} collapsed={collapsed} />
           )
         )}
       </nav>
 
-      {/* Footer: solo botón de cerrar sesión */}
-      <div style={s.foot}>
+      {/* Footer */}
+      <div className="border-t border-[#1E1E1E] px-2 py-[10px]">
         <button
-          style={s.logoutBtn(logoutHovered, collapsed)}
-          onMouseEnter={() => setLogoutHovered(true)}
-          onMouseLeave={() => setLogoutHovered(false)}
           onClick={handleLogout}
+          className="flex items-center gap-[10px] px-[10px] py-[9px] rounded-[6px] cursor-pointer border-none w-full whitespace-nowrap overflow-hidden text-[13px] font-sans transition-colors duration-150 bg-transparent text-[#555] hover:bg-[#2A1515] hover:text-[#E87878]"
           title="Cerrar sesión"
           aria-label="Cerrar sesión"
         >
-          <i className="ti ti-logout" style={{ fontSize: '18px', flexShrink: 0 }} aria-hidden="true" />
-          <span style={s.itemLabel(collapsed)}>Cerrar sesión</span>
+          <i className="ti ti-logout text-lg shrink-0" aria-hidden="true" />
+          <span className={collapsed ? 'hidden' : 'block'}>Cerrar sesión</span>
         </button>
       </div>
     </aside>

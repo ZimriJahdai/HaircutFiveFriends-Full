@@ -64,18 +64,16 @@ export const useDashboardStats = () => {
   const loadAdminStats = async () => {
     const todayISO = new Date().toISOString().split('T')[0];
 
-    const [appointmentsToday, clients, barbers, sales, reviews, products] = await Promise.all([
+    const [appointmentsToday, clients, barbers, sales, products] = await Promise.all([
       fetchAppointmentsByDate(token, todayISO).catch(() => ({ total: 0, data: [] })),
       fetchClients(token).catch(() => ({ data: [] })),
       fetchBarbers(token).catch(() => ({ data: [] })),
       fetchSales(token).catch(() => ({ sales: [] })),
-      axiosAdmin.get('/review/obtener').then(r => r.data).catch(() => ({ data: [] })),
       axiosAdmin.get('/products').then(r => r.data).catch(() => ({ data: [] })),
     ]);
 
     const salesArr = sales.sales ?? [];
     const clientsArr = clients.data ?? [];
-    const reviewsArr = reviews.data ?? [];
     const productsArr = products.data ?? [];
     const appointmentsTodayArr = appointmentsToday.data ?? [];
 
@@ -102,23 +100,30 @@ export const useDashboardStats = () => {
       .sort((a, b) => new Date(a.appointmentDate) - new Date(b.appointmentDate))
       .slice(0, 6);
 
-    // Actividad reciente: últimas reviews + últimos clientes
-    const recentActivity = [
-      ...reviewsArr.slice(0, 3).map(r => ({
-        type: 'review', icon: 'ti-star', time: r.createdAt,
-        text: `Nueva reseña de `, bold: r.clientId?.name || 'Cliente',
-        score: r.score,
-      })),
-      ...clientsArr.slice(-3).reverse().map(c => ({
-        type: 'client', icon: 'ti-user-plus', time: c.createdAt,
-        text: 'Nuevo cliente registrado: ', bold: c.name || 'Cliente',
-      })),
-    ].sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 5);
-
-    // Top productos por stock vendido (usamos quantity como proxy)
-    const topProducts = [...productsArr]
-      .sort((a, b) => (b.quantitySold || b.quantity || 0) - (a.quantitySold || a.quantity || 0))
-      .slice(0, 4);
+    // Top productos por detalle de ventas
+    let topProducts = [];
+    try {
+      const detailRes = await axiosAdmin.get('/detail-sales').then(r => r.data).catch(() => ({ details: [] }));
+      const productSales = {};
+      (detailRes.details || [])
+        .filter(d => d.detailType === 'PRODUCT')
+        .forEach(d => {
+          const pid = d.referenceId?.toString() || d.productId?.toString();
+          if (pid) productSales[pid] = (productSales[pid] || 0) + (d.quantity || 1);
+        });
+      const productMap = {};
+      productsArr.forEach(p => { productMap[p.id || p._id] = p; });
+      topProducts = Object.entries(productSales)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 4)
+        .map(([id, qty]) => ({
+          ...(productMap[id] || { name: 'Producto', image: null }),
+          quantity: qty,
+        }));
+      if (!topProducts.length) topProducts = productsArr.slice(0, 4);
+    } catch (_) {
+      topProducts = productsArr.slice(0, 4);
+    }
 
     // Distribución citas por estado
     const statuses = ['PENDIENTE','CONFIRMADO','COMPLETADO','CANCELADO'];
@@ -141,10 +146,8 @@ export const useDashboardStats = () => {
         barbers: barbers.data ?? [],
         sales: salesArr,
         salesByDay,
-        recentActivity,
         topProducts,
         appointmentsByStatus,
-        reviews: reviewsArr,
       },
     });
   };

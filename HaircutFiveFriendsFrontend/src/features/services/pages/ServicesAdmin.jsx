@@ -55,8 +55,9 @@ export const ServicesAdmin = () => {
       <div className="flex gap-2 mb-5 flex-wrap">
         {ADMIN_FILTERS.map(f => (
           <button key={f} onClick={() => setFilter(f)}
-            className="px-3 py-1.5 rounded-md text-[12px] border transition-colors cursor-pointer"
-            style={{ background: filter === f ? '#C9A84C18' : 'transparent', border: `1px solid ${filter === f ? '#C9A84C44' : '#2A2A2A'}`, color: filter === f ? '#C9A84C' : '#555' }}>
+            className={`px-3 py-1.5 rounded-md text-[12px] border transition-colors cursor-pointer ${
+              filter === f ? 'bg-[#C9A84C18] border-[#C9A84C44] text-[#C9A84C]' : 'bg-transparent border-[#2A2A2A] text-[#555]'
+            }`}>
             {f === 'Todos' ? 'Todos' : f.charAt(0).toUpperCase() + f.slice(1)}
           </button>
         ))}

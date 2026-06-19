@@ -1,8 +1,4 @@
-export const ReviewsFilter = ({
-  filter,
-  setFilter,
-  total,
-}) => {
+export const ReviewsFilter = ({ filter, setFilter, total }) => {
   const options = [
     ['todos', 'Todas'],
     ['barbero', 'Por barbero'],
@@ -10,26 +6,21 @@ export const ReviewsFilter = ({
   ];
 
   return (
-    <div style={{ display: 'flex', gap: '8px', marginBottom: '1rem' }}>
+    <div className="flex gap-2 mb-4">
       {options.map(([key, label]) => (
         <button
           key={key}
           onClick={() => setFilter(key)}
-          style={{
-            padding: '6px 14px',
-            borderRadius: '6px',
-            border: '1px solid',
-            cursor: 'pointer',
-            fontSize: '12px',
-            background: filter === key ? '#C9A84C18' : 'transparent',
-            borderColor: filter === key ? '#C9A84C44' : '#2A2A2A',
-            color: filter === key ? '#C9A84C' : '#555',
-          }}
+          className={`px-[14px] py-[6px] rounded-[6px] border cursor-pointer text-xs transition-colors ${
+            filter === key
+              ? 'bg-[#C9A84C18] border-[#C9A84C44] text-[#C9A84C]'
+              : 'bg-transparent border-[#2A2A2A] text-[#555]'
+          }`}
         >
           {label}
         </button>
       ))}
-      <span style={{ marginLeft: 'auto', color: '#555', fontSize: '12px', alignSelf: 'center' }}>
+      <span className="ml-auto text-[#555] text-xs self-center">
         {total} reseñas
       </span>
     </div>

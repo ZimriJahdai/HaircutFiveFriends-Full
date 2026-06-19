@@ -2,33 +2,16 @@ import { useState, useEffect } from 'react';
 import { createService, updateService } from '../../../shared/api/service.js';
 
 const CATEGORIES = [
-  { value: 'CORTE_DE_CABELLO',       label: 'Corte de cabello' },
-  { value: 'AFEITADO',               label: 'Afeitado' },
-  { value: 'RECORTES_DE_BARBA',      label: 'Recortes de barba' },
-  { value: 'ARREGLO_DE_CABELLO',     label: 'Arreglo de cabello' },
+  { value: 'CORTE_DE_CABELLO', label: 'Corte de cabello' },
+  { value: 'AFEITADO', label: 'Afeitado' },
+  { value: 'RECORTES_DE_BARBA', label: 'Recortes de barba' },
+  { value: 'ARREGLO_DE_CABELLO', label: 'Arreglo de cabello' },
   { value: 'TRATAMIENTOS_CAPILARES', label: 'Tratamientos capilares' },
-  { value: 'TRATAMIENTOS_FACIALES',  label: 'Tratamientos faciales' },
+  { value: 'TRATAMIENTOS_FACIALES', label: 'Tratamientos faciales' },
 ];
 
-const overlay = {
-  position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)',
-  display: 'flex', alignItems: 'center', justifyContent: 'center',
-  zIndex: 1000, padding: '1rem',
-};
-const box = {
-  background: '#111', border: '1px solid #2A2A2A', borderRadius: '12px',
-  width: '100%', maxWidth: '480px', padding: '1.5rem', fontFamily: "'Inter',sans-serif",
-};
-const inp = {
-  width: '100%', background: '#0F0F0F', border: '1px solid #2A2A2A',
-  borderRadius: '6px', padding: '9px 12px', color: '#E8E4DC', fontSize: '13px',
-  outline: 'none', boxSizing: 'border-box',
-};
-const lbl = {
-  fontSize: '11px', color: '#5A5A5A', letterSpacing: '0.5px',
-  textTransform: 'uppercase', display: 'block', marginBottom: '5px',
-};
-const row = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' };
+const inputCls = 'w-full bg-[#0F0F0F] border border-[#2A2A2A] rounded-[6px] px-3 py-[9px] text-[#E8E4DC] text-[13px] outline-none box-border';
+const labelCls = 'text-[11px] text-[#5A5A5A] tracking-[0.5px] uppercase block mb-[5px]';
 
 export const ServiceModal = ({ editing, onClose, onSuccess }) => {
   const isEdit = !!editing;
@@ -81,77 +64,78 @@ export const ServiceModal = ({ editing, onClose, onSuccess }) => {
   };
 
   return (
-    <div style={overlay} onClick={e => e.target === e.currentTarget && onClose()}>
-      <div style={box}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-          <h2 style={{ margin: 0, fontFamily: "'Bebas Neue',sans-serif", fontSize: '22px', letterSpacing: '2px', color: '#E8E4DC' }}>
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[1000] p-4" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="bg-[#111] border border-[#2A2A2A] rounded-xl w-full max-w-[480px] p-6 font-['Inter',sans-serif]">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="font-['Bebas_Neue',sans-serif] text-[22px] tracking-[2px] text-[#E8E4DC] m-0">
             {isEdit ? 'Editar Servicio' : 'Nuevo Servicio'}
           </h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#555', cursor: 'pointer', fontSize: '18px', padding: '2px' }}>
+          <button onClick={onClose} className="bg-none border-none text-[#555] cursor-pointer text-lg p-[2px]">
             <i className="ti ti-x" />
           </button>
         </div>
 
         {error && (
-          <div style={{ background: '#2A1515', border: '1px solid #5A2020', borderRadius: '6px', padding: '10px 12px', fontSize: '12px', color: '#E88', marginBottom: '14px', display: 'flex', gap: '8px' }}>
+          <div className="bg-[#2A1515] border border-[#5A2020] rounded-[6px] px-3 py-[10px] text-xs text-[#E88] mb-[14px] flex gap-2">
             <i className="ti ti-alert-circle" />{error}
           </div>
         )}
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <div className="flex flex-col gap-[14px]">
           <div>
-            <label style={lbl}>Nombre *</label>
-            <input style={inp} value={form.name} onChange={e => set('name', e.target.value)} placeholder="Ej: Corte clásico" />
+            <label className={labelCls}>Nombre *</label>
+            <input className={inputCls} value={form.name} onChange={e => set('name', e.target.value)} placeholder="Ej: Corte clásico" />
           </div>
           <div>
-            <label style={lbl}>Descripción *</label>
-            <textarea style={{ ...inp, height: '72px', resize: 'vertical' }}
+            <label className={labelCls}>Descripción *</label>
+            <textarea className={`${inputCls} h-[72px] resize-y`}
               value={form.description} onChange={e => set('description', e.target.value)}
               placeholder="Descripción del servicio..." />
           </div>
-          <div style={row}>
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label style={lbl}>Precio (Q) *</label>
-              <input style={inp} type="number" min="0" value={form.price} onChange={e => set('price', e.target.value)} placeholder="0.00" />
+              <label className={labelCls}>Precio (Q) *</label>
+              <input className={inputCls} type="number" min="0" value={form.price} onChange={e => set('price', e.target.value)} placeholder="0.00" />
             </div>
             <div>
-              <label style={lbl}>Precio en puntos</label>
-              <input style={inp} type="number" min="0" value={form.pointsPrice} onChange={e => set('pointsPrice', e.target.value)} placeholder="Opcional" />
+              <label className={labelCls}>Precio en puntos</label>
+              <input className={inputCls} type="number" min="0" value={form.pointsPrice} onChange={e => set('pointsPrice', e.target.value)} placeholder="Opcional" />
             </div>
           </div>
-          <div style={row}>
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label style={lbl}>Duración *</label>
-              <input style={inp} value={form.duration} onChange={e => set('duration', e.target.value)} placeholder="30min" />
+              <label className={labelCls}>Duración *</label>
+              <input className={inputCls} value={form.duration} onChange={e => set('duration', e.target.value)} placeholder="30min" />
             </div>
             <div>
-              <label style={lbl}>Estado</label>
-              <select style={{ ...inp, cursor: 'pointer' }} value={form.status} onChange={e => set('status', e.target.value)}>
+              <label className={labelCls}>Estado</label>
+              <select className={`${inputCls} cursor-pointer`} value={form.status} onChange={e => set('status', e.target.value)}>
                 <option value="activo">Activo</option>
                 <option value="inactivo">Inactivo</option>
               </select>
             </div>
           </div>
           <div>
-            <label style={lbl}>Categoría *</label>
-            <select style={{ ...inp, cursor: 'pointer' }} value={form.category} onChange={e => set('category', e.target.value)}>
+            <label className={labelCls}>Categoría *</label>
+            <select className={`${inputCls} cursor-pointer`} value={form.category} onChange={e => set('category', e.target.value)}>
               {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
             </select>
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '10px', marginTop: '1.5rem', justifyContent: 'flex-end' }}>
-          <button onClick={onClose} style={{ background: 'transparent', border: '1px solid #2A2A2A', borderRadius: '6px', padding: '8px 16px', color: '#777', fontSize: '13px', cursor: 'pointer' }}>
+        <div className="flex gap-[10px] mt-6 justify-end">
+          <button onClick={onClose} className="bg-transparent border border-[#2A2A2A] rounded-[6px] px-4 py-2 text-[#777] text-[13px] cursor-pointer">
             Cancelar
           </button>
           <button onClick={handleSubmit} disabled={saving}
-            style={{ background: saving ? '#A08030' : '#C9A84C', border: 'none', borderRadius: '6px', padding: '8px 20px', color: '#0A0A0A', fontSize: '13px', fontWeight: 500, cursor: saving ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            {saving && <div style={{ width: '12px', height: '12px', border: '2px solid #0A0A0A44', borderTopColor: '#0A0A0A', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />}
+            className={`rounded-[6px] px-5 py-2 text-[13px] font-medium cursor-pointer flex items-center gap-1.5 border-none transition-colors ${
+              saving ? 'bg-[#A08030] text-[#0A0A0A] cursor-not-allowed' : 'bg-[#C9A84C] text-[#0A0A0A]'
+            }`}>
+            {saving && <div className="w-3 h-3 border-2 border-[#0A0A0A44] border-t-[#0A0A0A] rounded-full animate-spin" />}
             {saving ? 'Guardando…' : (isEdit ? 'Actualizar' : 'Crear servicio')}
           </button>
         </div>
       </div>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   );
 };
