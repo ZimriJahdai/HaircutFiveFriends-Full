@@ -7,6 +7,7 @@ import { PasswordChangeModal } from '../components/PasswordChangeModal.jsx';
 import { ProfileAvatar } from '../components/ProfileAvatar.jsx';
 import { ProfileInfoForm } from '../components/ProfileInfoForm.jsx';
 import { ProfileQuickActions } from '../components/ProfileQuickActions.jsx';
+import defaultAvatarImg from '../../../assets/img/defaultAvatarImg.png';
 
 export const Perfil = () => {
   const { user, logout, updateUser } = useAuthStore();

@@ -17,12 +17,12 @@ export default function NavbarClient() {
 
   return (
     <header className="sticky top-0 z-50 bg-[#070707]/95 backdrop-blur-xl border-b border-white/5">
-      <div className="max-w-[1400px] mx-auto px-6 h-22 flex items-center justify-between">
+      <div className="max-w-[1400px] mx-auto px-6 h-22 flex items-center gap-4">
 
         {/* Logo */}
         <Link
           to="/client"
-          className="flex items-center gap-3 group"
+          className="flex items-center gap-3 group flex-shrink-0"
         >
           <div>
             <h1 className="font-['Bebas_Neue'] text-3xl leading-none tracking-wider text-white">
@@ -35,7 +35,7 @@ export default function NavbarClient() {
         </Link>
 
         {/* Navigation */}
-        <nav className="hidden lg:flex items-center bg-white/[0.03] border border-white/5 rounded-2xl px-3 py-2">
+        <nav className="hidden lg:flex flex-1 min-w-0 items-center overflow-x-auto bg-white/[0.03] border border-white/5 rounded-2xl px-3 py-2 scrollbar-thin scrollbar-thumb-[#00D2C4]/30 scrollbar-track-transparent">
 
           <NavLink to="/client" end className={navLinkClass}>
             <i className="ti ti-home text-base" />
@@ -95,7 +95,9 @@ export default function NavbarClient() {
         </nav>
 
         {/* Profile Avatar */}
-        <AvatarUser dark menuItems={CLIENT_MENU_ITEMS} />
+        <div className="flex-shrink-0">
+          <AvatarUser dark menuItems={CLIENT_MENU_ITEMS} />
+        </div>
 
       </div>
     </header>
