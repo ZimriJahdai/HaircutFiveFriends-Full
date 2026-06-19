@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import NavbarClient from '../../client/components/NavbarClient.jsx';
 import { useProducts } from '../hooks/useProducts.js';
 import { ProductCard } from '../components/ProductCard';
+import { ProductDetailModal } from '../components/ProductDetailModal';
 import { ProductEmptyState } from '../components/ProductEmptyState';
 import { ProductPageHeader } from '../components/ProductPageHeader';
 import { useAuthStore } from '../../auth/store/authStore';
@@ -22,6 +23,7 @@ export const ProductsClient = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [submittingRedeem, setSubmittingRedeem] = useState(false);
+  const [detailProduct, setDetailProduct] = useState(null);
 
   const clientId = user?.clientId || user?.uid || user?._id;
 
@@ -196,11 +198,19 @@ export const ProductsClient = () => {
                 mode="client"
                 userPoints={points}
                 onRedeem={() => handleOpenRedeem(product)}
+                onDetail={setDetailProduct}
               />
             ))}
           </div>
         )}
       </main>
+
+      {detailProduct && (
+        <ProductDetailModal
+          product={detailProduct}
+          onClose={() => setDetailProduct(null)}
+        />
+      )}
 
       <ConfirmModal
         isOpen={showConfirm}

@@ -18,13 +18,16 @@ const formatMoney = (value) => {
   }).format(numeric);
 };
 
-export const ProductCard = ({ product, mode = 'client', onEdit, onDelete, userPoints = 0, onRedeem }) => {
+export const ProductCard = ({ product, mode = 'client', onEdit, onDelete, userPoints = 0, onRedeem, onDetail }) => {
   const isInactive = product.status === 'inactive';
   const canEdit = mode === 'admin' && (onEdit || onDelete);
 
   return (
     <div className="relative rounded-2xl border border-[#2A2A2A] bg-[#111] overflow-hidden shadow-[0_0_0_1px_rgba(201,168,76,0.08)] transition-transform hover:-translate-y-0.5">
-      <div className="relative h-48 bg-[#181818] overflow-hidden">
+      <div
+        className={`relative h-48 bg-[#181818] overflow-hidden ${onDetail ? 'cursor-pointer' : ''}`}
+        onClick={() => onDetail?.(product)}
+      >
         {mode === 'client' && (
           <FavoriteButton
             id={product._id || product.id}
