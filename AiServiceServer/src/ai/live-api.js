@@ -6,6 +6,44 @@ import { executeFunctionCall } from './barber-tools-executor.js';
 import { Chat } from '../chats/chat.model.js';
 import { getUserIdFromToken } from '../../middlewares/validate-JWT.js';
 import { GCP_PROJECT, GCP_LOCATION, MODELS } from '../../configs/genai.js';
+import { summarizeAssistantReply } from '../../services/genaiService.js';
+
+// Cuantos mensajes recientes del historial inyectar en el systemInstruction
+const HISTORY_LIMIT = 10;
+
+// Construye un texto de historial reciente (usuario + asistente) para que el
+// Live tenga contexto de lo ya hablado desde el primer mensaje.
+const buildHistoryText = async (userId) => {
+    if (!userId) return '';
+    try {
+        const doc = await Chat.findOne(
+            { userId },
+            { messages: 1, _id: 0 }
+        ).lean();
+        const msgs = Array.isArray(doc?.messages) ? doc.messages : [];
+        if (!msgs.length) return '';
+
+        const lines = msgs
+            .slice(-HISTORY_LIMIT)
+            .map((m) => {
+                const text = (m.parts || [])
+                    .map((p) => p?.text)
+                    .filter(Boolean)
+                    .join(' ')
+                    .trim();
+                if (!text) return null;
+                const who = m.role === 'user' ? 'Usuario' : 'Asistente';
+                return `- ${who}: ${text}`;
+            })
+            .filter(Boolean);
+
+        if (!lines.length) return '';
+        return `Historial reciente de la conversacion (para contexto):\n${lines.join('\n')}`;
+    } catch (error) {
+        console.error('[LiveAPI] Error cargando historial:', error);
+        return '';
+    }
+};
 
 // GCP Configs (centralizadas en configs/genai.js)
 const location = GCP_LOCATION;
@@ -18,38 +56,13 @@ const auth = new GoogleAuth({
 
 // URL WebSocket para Vertex AI
 const buildVertexWsUrl = (loc) => (
-    `wss://${loc}-aiplatform.googleapis.com/ws/google.cloud.aiplatform.v1beta1.LlmBidiService/BidiGenerateContent`
+    `wss://${loc}-aiplatform.googleapis.com/ws/google.cloud.aiplatform.v1.LlmBidiService/BidiGenerateContent`
 );
 
 // Formato de Modelo Completo para Vertex AI
 const buildVertexModelPath = (proj, loc, modelId) => (
     `projects/${proj}/locations/${loc}/publishers/google/models/${modelId}`
 );
-
-const extractVoiceTranscripts = (payload) => {
-    const entries = [];
-    const inputText = payload?.serverContent?.inputTranscription?.text;
-    if (inputText) {
-        entries.push({ role: 'user', text: inputText });
-    }
-
-    const outputText = payload?.serverContent?.outputTranscription?.text;
-    if (outputText) {
-        entries.push({ role: 'model', text: outputText });
-    } else {
-        const modelParts = payload?.serverContent?.modelTurn?.parts || [];
-        const modelText = modelParts
-            .map((part) => part?.text)
-            .filter(Boolean)
-            .join(' ')
-            .trim();
-        if (modelText) {
-            entries.push({ role: 'model', text: modelText });
-        }
-    }
-
-    return entries;
-};
 
 const appendVoiceMessage = async (userId, role, text) => {
     if (!userId || !text) return;
@@ -113,16 +126,65 @@ export const setupLiveApi = (wss) => {
 
         let setupReady = false;
         const pendingMessages = [];
-        const memoryText = await getVoiceMemory();
-        const combinedInstruction = memoryText
-            ? `${systemInstruction}\n\nMemoria persistente:\n${memoryText}`
-            : systemInstruction;
         let authToken = '';
         let userId = '';
-        let lastUserTranscript = '';
-        let lastModelTranscript = '';
 
-        const sendSetup = () => {
+        // Estado para gatear el envio del setup: necesitamos el token (userId)
+        // para inyectar el historial en el systemInstruction. Esperamos el auth
+        // un breve momento; si no llega, enviamos setup sin historial.
+        let geminiOpen = false;
+        let authResolved = false;
+        let setupSent = false;
+        let setupTimer = null;
+
+        // Acumuladores de la transcripcion del turno actual. El audio no trae
+        // texto: con input/outputAudioTranscription Gemini envia fragmentos que
+        // unimos y persistimos al cerrar el turno (turnComplete).
+        let userTurnText = '';
+        let modelTurnText = '';
+
+        const finalizeTurn = async () => {
+            const uText = userTurnText.trim();
+            const mText = modelTurnText.trim();
+            userTurnText = '';
+            modelTurnText = '';
+            if (!userId) return;
+
+            // Usuario: se guarda verbatim (igual que el chatbot).
+            if (uText) {
+                await appendVoiceMessage(userId, 'user', uText);
+            }
+
+            // Asistente: se resume con un modelo ligero para no inflar tokens
+            // del Live. Si el resumen falla, se guarda el texto completo.
+            if (mText) {
+                let summary = mText;
+                try {
+                    const s = await summarizeAssistantReply(mText);
+                    if (s) summary = s;
+                } catch (error) {
+                    console.error('[LiveAPI] Error resumiendo respuesta:', error);
+                }
+                await appendVoiceMessage(userId, 'model', summary);
+            }
+        };
+
+        const sendSetup = async () => {
+            if (setupSent || !geminiOpen) return;
+            setupSent = true;
+            if (setupTimer) {
+                clearTimeout(setupTimer);
+                setupTimer = null;
+            }
+
+            const memoryText = await getVoiceMemory();
+            const historyText = await buildHistoryText(userId);
+
+            const parts = [systemInstruction];
+            if (memoryText) parts.push(`Memoria persistente:\n${memoryText}`);
+            if (historyText) parts.push(historyText);
+            const combinedInstruction = parts.join('\n\n');
+
             const setupMessage = {
                 setup: {
                     // Nota: Vertex requiere la ruta completa del recurso para el modelo
@@ -134,6 +196,9 @@ export const setupLiveApi = (wss) => {
                         parts: [{ text: combinedInstruction }],
                     },
                     tools: barberTools,
+                    // Habilitar transcripcion para poder persistir el chat de voz.
+                    inputAudioTranscription: {},
+                    outputAudioTranscription: {},
                 },
             };
 
@@ -143,7 +208,13 @@ export const setupLiveApi = (wss) => {
 
         geminiSocket.on('open', () => {
             console.log('[LiveAPI] Socket abierto con Gemini Live (Vertex)');
-            sendSetup();
+            geminiOpen = true;
+            if (authResolved) {
+                sendSetup();
+            } else {
+                // Margen para que llegue el token del cliente; si no, setup sin historial.
+                setupTimer = setTimeout(() => sendSetup(), 600);
+            }
         });
 
         geminiSocket.on('message', async (data) => {
@@ -161,19 +232,16 @@ export const setupLiveApi = (wss) => {
                     }
                 }
 
-                const transcripts = extractVoiceTranscripts(parsed);
-                if (transcripts.length > 0 && userId) {
-                    for (const entry of transcripts) {
-                        if (entry.role === 'user') {
-                            if (entry.text.trim() === lastUserTranscript) continue;
-                            lastUserTranscript = entry.text.trim();
-                        }
-                        if (entry.role === 'model') {
-                            if (entry.text.trim() === lastModelTranscript) continue;
-                            lastModelTranscript = entry.text.trim();
-                        }
-                        await appendVoiceMessage(userId, entry.role, entry.text);
-                    }
+                // Acumular transcripcion del turno (fragmentos incrementales).
+                const inputText = parsed?.serverContent?.inputTranscription?.text;
+                if (inputText) userTurnText += inputText;
+
+                const outputText = parsed?.serverContent?.outputTranscription?.text;
+                if (outputText) modelTurnText += outputText;
+
+                // Al cerrar el turno, persistir usuario (verbatim) y modelo (resumido).
+                if (parsed?.serverContent?.turnComplete) {
+                    finalizeTurn();
                 }
 
                 if (parsed?.toolCall?.functionCalls?.length) {
@@ -214,6 +282,11 @@ export const setupLiveApi = (wss) => {
         });
 
         geminiSocket.on('close', (code, reason) => {
+            geminiOpen = false;
+            if (setupTimer) {
+                clearTimeout(setupTimer);
+                setupTimer = null;
+            }
             const reasonText = reason?.toString() || '';
             console.log('[LiveAPI] Socket cerrado con Gemini Live:', code, reasonText);
             if (ws.readyState === WebSocket.OPEN) {
@@ -246,6 +319,12 @@ export const setupLiveApi = (wss) => {
                     console.warn('[LiveAPI] Token invalido para persistir voz');
                 }
                 console.log('[LiveAPI] Token recibido para tools');
+                // Ya tenemos userId: si el socket de Gemini esta abierto y el
+                // setup aun no salio, enviarlo ahora con el historial inyectado.
+                authResolved = true;
+                if (geminiOpen && !setupSent) {
+                    sendSetup();
+                }
                 return;
             }
 

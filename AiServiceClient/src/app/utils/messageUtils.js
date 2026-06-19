@@ -1,6 +1,7 @@
 export const createUserMessage = (text) => ({
   role: 'user',
   parts: [{ text }],
+  timestamp: new Date().toISOString(),
 });
 
 export const getMessageText = (msg) => {

@@ -38,46 +38,52 @@ export default function LoginPage() {
   };
 
   return (
-    <section className="page">
-      <div className="page-head">
-        <h1>Iniciar sesion</h1>
-        <p>Usa tus credenciales del AuthService para activar el chat y las herramientas.</p>
-      </div>
+    <section className="page login-page">
+      <div className="login-stage">
+        <div className="login-card-x">
+          <span className="login-flair-bar" aria-hidden="true" />
+          <span className="login-ghost" aria-hidden="true">AI</span>
 
-      <div className="card">
-        <form onSubmit={handleSubmit} className="login-form">
-          <label className="login-label" htmlFor="email">Email</label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="correo@dominio.com"
-            required
-            autoComplete="email"
-            disabled={loading}
-            className="login-input"
-          />
+          <span className="login-eyebrow">Acceso · barberia IA</span>
+          <h1 className="login-title">Iniciar sesion</h1>
+          <p className="login-sub">
+            Usa tus credenciales del AuthService para activar el chat y las herramientas.
+          </p>
 
-          <label className="login-label" htmlFor="password">Contrasena</label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder="********"
-            required
-            autoComplete="current-password"
-            disabled={loading}
-            className="login-input"
-          />
+          <form onSubmit={handleSubmit} className="login-form">
+            <label className="login-label" htmlFor="email">Email</label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="correo@dominio.com"
+              required
+              autoComplete="email"
+              disabled={loading}
+              className="login-input"
+            />
 
-          {error && <div className="login-error" role="alert">{error}</div>}
+            <label className="login-label" htmlFor="password">Contrasena</label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="********"
+              required
+              autoComplete="current-password"
+              disabled={loading}
+              className="login-input"
+            />
 
-          <button className="ghost-button" type="submit" disabled={loading} aria-busy={loading}>
-            {loading ? 'Ingresando...' : 'Ingresar'}
-          </button>
-        </form>
+            {error && <div className="login-error" role="alert">{error}</div>}
+
+            <button className="login-submit" type="submit" disabled={loading} aria-busy={loading}>
+              {loading ? 'Ingresando...' : 'Ingresar'}
+            </button>
+          </form>
+        </div>
       </div>
     </section>
   );

@@ -95,7 +95,8 @@ export const createSale = async (req, res) => {
                 if (quantity <= 0) continue
 
                 const detailId = detail._id.toString()
-                const usePoints = itemsWithPoints[detailId] === true
+                const refId = detail.referenceId?.toString()
+                const usePoints = itemsWithPoints[detailId] === true || (refId && itemsWithPoints[refId] === true)
 
                 if (detail.detailType === 'SERVICE') {
                     const service = await Service.findById(detail.referenceId).select('price pointsPrice')

@@ -1,109 +1,55 @@
-import { useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useState, useRef, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../../features/auth/store/authStore.js';
 
 const ROUTE_LABELS = {
   '/dashboard': 'Inicio',
+  '/dashboard/haircut': 'Cortes de cabello',
   '/dashboard/citas': 'Citas',
   '/dashboard/clientes': 'Clientes',
   '/dashboard/barberos': 'Barberos',
   '/dashboard/reportes': 'Reportes',
-  '/dashboard/catalogo': 'Catálogo',
-  '/dashboard/configuracion': 'Configuración',
+  '/dashboard/productos': 'Productos',
+  '/dashboard/servicios': 'Servicios',
+  '/dashboard/resenas': 'Reseñas',
+  '/dashboard/perfil': 'Mi perfil',
   '/client': 'Inicio',
   '/client/reservar': 'Reservar cita',
   '/client/citas': 'Mis citas',
   '/client/perfil': 'Mi perfil',
   '/client/servicios': 'Servicios',
   '/client/notificaciones': 'Notificaciones',
+  '/client/productos': 'Productos',
+  '/client/resenas': 'Reseñas',
 };
 
-const s = {
-  navbar: {
-    height: '54px',
-    background: '#111',
-    borderBottom: '1px solid #1E1E1E',
-    display: 'flex', alignItems: 'center',
-    padding: '0 20px', gap: '12px',
-    fontFamily: "'Inter', sans-serif",
-    flexShrink: 0,
-  },
-  toggleBtn: (hovered) => ({
-    width: '32px', height: '32px', borderRadius: '6px',
-    background: hovered ? '#1A1A1A' : 'transparent',
-    border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
-    cursor: 'pointer', color: hovered ? '#AAA' : '#555',
-    fontSize: '18px', flexShrink: 0,
-    transition: 'background 0.15s, color 0.15s',
-  }),
-  breadcrumb: {
-    display: 'flex', alignItems: 'center', gap: '6px',
-    fontSize: '13px', color: '#444', flex: 1,
-  },
-  breadcrumbActive: {
-    color: '#E8E4DC', fontWeight: 500,
-  },
-  search: (focused) => ({
-    display: 'flex', alignItems: 'center', gap: '8px',
-    background: focused ? '#1E1E1E' : '#1A1A1A',
-    border: `1px solid ${focused ? '#C9A84C44' : '#1E1E1E'}`,
-    borderRadius: '6px', padding: '0 12px', height: '32px',
-    cursor: 'text', transition: 'border-color 0.15s',
-  }),
-  searchIcon: { fontSize: '14px', color: '#333' },
-  searchInput: {
-    background: 'transparent', border: 'none', outline: 'none',
-    fontSize: '12px', color: '#AAA', fontFamily: "'Inter', sans-serif",
-    width: '140px',
-  },
-  actions: {
-    display: 'flex', alignItems: 'center', gap: '4px',
-  },
-  iconBtn: (hovered) => ({
-    width: '32px', height: '32px', borderRadius: '6px',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    cursor: 'pointer', fontSize: '18px',
-    background: hovered ? '#1A1A1A' : 'transparent',
-    color: hovered ? '#AAA' : '#555',
-    transition: 'background 0.15s, color 0.15s',
-    position: 'relative',
-  }),
-  notifDot: {
-    position: 'absolute', top: '6px', right: '6px',
-    width: '6px', height: '6px',
-    background: '#C9A84C', borderRadius: '50%',
-    border: '1px solid #111',
-  },
-  divider: {
-    width: '1px', height: '20px',
-    background: '#1E1E1E', margin: '0 4px',
-  },
-  profile: (hovered) => ({
-    display: 'flex', alignItems: 'center', gap: '8px',
-    padding: '4px 8px', borderRadius: '6px',
-    cursor: 'pointer',
-    background: hovered ? '#1A1A1A' : 'transparent',
-    transition: 'background 0.15s',
-  }),
-  avatar: {
-    width: '28px', height: '28px', borderRadius: '50%',
-    background: '#C9A84C22', border: '1px solid #C9A84C44',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: '10px', fontWeight: 500, color: '#C9A84C', flexShrink: 0,
-  },
-  pname: { fontSize: '12px', color: '#AAA', fontWeight: 500 },
-  prole: { fontSize: '10px', color: '#444' },
-};
+function DropItem({ icon, label, onClick, danger }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <button
+      className={`flex items-center gap-[9px] px-2.5 py-2 rounded-md cursor-pointer border-none w-full text-[13px] font-sans transition-colors ${
+        danger
+          ? (hovered ? 'bg-[#2A1515] text-[#E88]' : 'bg-transparent text-[#885]')
+          : (hovered ? 'bg-[#1A1A1A] text-[#E8E4DC]' : 'bg-transparent text-[#888]')
+      }`}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onClick={onClick}
+    >
+      <i className={`ti ${icon} text-base shrink-0`} />
+      {label}
+    </button>
+  );
+}
 
 export default function Navbar({ onToggleSidebar, hasNotifications = true }) {
-  const user = useAuthStore((state) => state.user);
+  const user     = useAuthStore((state) => state.user);
+  const logout   = useAuthStore((state) => state.logout);
   const location = useLocation();
+  const navigate = useNavigate();
 
-  const [toggleHovered, setToggleHovered] = useState(false);
-  const [bellHovered, setBellHovered] = useState(false);
-  const [settingsHovered, setSettingsHovered] = useState(false);
-  const [profileHovered, setProfileHovered] = useState(false);
-  const [searchFocused, setSearchFocused] = useState(false);
+  const [dropOpen, setDropOpen] = useState(false);
+  const dropRef = useRef(null);
 
   const role = user?.role || 'USER_ROLE';
   const section = role === 'ADMIN_ROLE' ? 'Dashboard' : 'Mi espacio';
@@ -118,87 +64,105 @@ export default function Navbar({ onToggleSidebar, hasNotifications = true }) {
     : 'Usuario';
 
   const roleShort =
-    role === 'ADMIN_ROLE' ? 'Admin' :
+    role === 'ADMIN_ROLE' ? 'Administrador' :
     role === 'ADMIN_RESTAURANTE' || role === 'ADMIN_RESTAURANT' ? 'Admin Rest.' :
     'Cliente';
 
+  useEffect(() => {
+    const handler = (e) => {
+      if (dropRef.current && !dropRef.current.contains(e.target)) setDropOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const handleLogout = () => {
+    setDropOpen(false);
+    logout();
+    navigate('/auth', { replace: true });
+  };
+
+  const goToProfile = () => {
+    setDropOpen(false);
+    navigate(role === 'ADMIN_ROLE' || role === 'EMPLOYEE_ROLE' ? '/dashboard/perfil' : '/client/perfil');
+  };
+
   return (
-    <header style={s.navbar}>
+    <header className="h-[54px] bg-[#111] border-b border-[#1E1E1E] flex items-center px-5 gap-3 font-sans shrink-0 relative z-50">
       <button
-        style={s.toggleBtn(toggleHovered)}
-        onMouseEnter={() => setToggleHovered(true)}
-        onMouseLeave={() => setToggleHovered(false)}
         onClick={onToggleSidebar}
+        className="w-8 h-8 rounded-md hover:bg-[#1A1A1A] flex items-center justify-center cursor-pointer border-none text-[#555] hover:text-[#AAA] text-lg shrink-0 transition-colors"
         aria-label="Colapsar sidebar"
       >
         <i className="ti ti-menu-2" aria-hidden="true" />
       </button>
 
-      <div style={s.breadcrumb}>
+      <div className="flex items-center gap-1.5 text-[13px] text-[#444] flex-1">
         <span>{section}</span>
-        <span style={{ fontSize: '10px' }}>›</span>
-        <span style={s.breadcrumbActive}>{currentPage}</span>
+        <span className="text-[10px]">›</span>
+        <span className="text-[#E8E4DC] font-medium">{currentPage}</span>
       </div>
 
-      <div style={s.search(searchFocused)}>
-        <i className="ti ti-search" style={s.searchIcon} aria-hidden="true" />
+      <div className="flex items-center gap-2 bg-[#1A1A1A] focus-within:bg-[#1E1E1E] border border-[#1E1E1E] focus-within:border-[#C9A84C]/30 rounded-md px-3 h-8 cursor-text transition-colors">
+        <i className="ti ti-search text-sm text-[#333]" aria-hidden="true" />
         <input
-          type="text"
-          placeholder="Buscar..."
-          style={s.searchInput}
-          onFocus={() => setSearchFocused(true)}
-          onBlur={() => setSearchFocused(false)}
+          type="text" placeholder="Buscar..."
+          className="bg-transparent border-none outline-none text-[12px] text-[#AAA] font-sans w-[140px] placeholder-[#555]"
           aria-label="Buscar"
         />
       </div>
 
-      <div style={s.actions}>
-        <div
-          style={s.iconBtn(bellHovered)}
-          onMouseEnter={() => setBellHovered(true)}
-          onMouseLeave={() => setBellHovered(false)}
-          title="Notificaciones"
-          role="button"
-          aria-label="Notificaciones"
-        >
+      <div className="flex items-center gap-1">
+        <div className="w-8 h-8 rounded-md hover:bg-[#1A1A1A] flex items-center justify-center cursor-pointer text-lg border-none text-[#555] hover:text-[#AAA] transition-colors relative" role="button" aria-label="Notificaciones">
           <i className="ti ti-bell" aria-hidden="true" />
-          {hasNotifications && <span style={s.notifDot} />}
+          {hasNotifications && <span className="absolute top-[6px] right-[6px] w-[6px] h-[6px] bg-[#C9A84C] rounded-full border border-[#111]" />}
         </div>
 
-        <div
-          style={s.iconBtn(settingsHovered)}
-          onMouseEnter={() => setSettingsHovered(true)}
-          onMouseLeave={() => setSettingsHovered(false)}
-          title="Configuración"
-          role="button"
-          aria-label="Configuración"
-        >
-          <i className="ti ti-settings" aria-hidden="true" />
-        </div>
+        <div className="w-px h-5 bg-[#1E1E1E] mx-1" />
 
-        <div style={s.divider} />
+        <div ref={dropRef} className="relative">
+          <div
+            className={`flex items-center gap-2 px-2 py-1 rounded-md cursor-pointer transition-colors ${dropOpen ? 'bg-[#1A1A1A]' : 'hover:bg-[#1A1A1A]'}`}
+            onClick={() => setDropOpen((v) => !v)}
+            role="button"
+            aria-label="Menú de usuario"
+            aria-expanded={dropOpen}
+          >
+            <div className="w-7 h-7 rounded-full bg-[#C9A84C]/15 border border-[#C9A84C]/30 flex items-center justify-center text-[10px] font-medium text-[#C9A84C] shrink-0 overflow-hidden">
+              {(user?.profilePicture || user?.ProfilePicture) ? (
+                <img
+                  src={user.profilePicture || user.ProfilePicture} alt="Foto de perfil"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.style.display = 'none';
+                    e.target.parentNode.innerText = initials;
+                  }}
+                />
+              ) : initials}
+            </div>
+            <div>
+              <div className="text-[12px] text-[#E8E4DC] font-semibold">{shortName}</div>
+              <div className="text-[10px] text-[#555]">{roleShort}</div>
+            </div>
+            <i
+              className="ti ti-chevron-down text-[12px] text-[#555] transition-transform"
+              style={{ transform: dropOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
+              aria-hidden="true"
+            />
+          </div>
 
-        <div
-          style={s.profile(profileHovered)}
-          onMouseEnter={() => setProfileHovered(true)}
-          onMouseLeave={() => setProfileHovered(false)}
-          role="button"
-          aria-label="Perfil de usuario"
-        >
-          <div style={s.avatar}>
-            {user?.profilePicture ? (
-              <img
-                src={user.profilePicture}
-                alt="Foto de perfil"
-                style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
-              />
-            ) : initials}
-          </div>
-          <div>
-            <div style={s.pname}>{shortName}</div>
-            <div style={s.prole}>{roleShort}</div>
-          </div>
-          <i className="ti ti-chevron-down" style={{ fontSize: '12px', color: '#333' }} aria-hidden="true" />
+          {dropOpen && (
+            <div className="absolute top-[calc(100%+8px)] right-0 bg-[#161616] border border-[#1E1E1E] rounded-lg p-1.5 min-w-[180px] z-[100] shadow-[0_8px_24px_rgba(0,0,0,0.5)]">
+              <div className="px-2.5 pb-2.5 border-b border-[#1E1E1E] mb-1">
+                <div className="text-[13px] text-white font-bold mb-0.5">{user?.name || 'Usuario'}</div>
+                <div className="text-[11px] text-[#555]">{user?.email || ''}</div>
+              </div>
+              <DropItem icon="ti-user-circle" label="Mi perfil" onClick={goToProfile} />
+              <div className="h-px bg-[#1E1E1E] my-1" />
+              <DropItem icon="ti-logout" label="Cerrar sesión" onClick={handleLogout} danger />
+            </div>
+          )}
         </div>
       </div>
     </header>

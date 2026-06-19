@@ -13,6 +13,12 @@ export const GCP_LOCATION =
   process.env.GOOGLE_VERTEX_LOCATION ||
   "us-central1";
 
+// Region por modelo. Los Gemini 3.x preview (TEXT) corren en el endpoint
+// `global`; el LIVE native-audio y el resto siguen en us-central1 (GCP_LOCATION).
+export const LOCATIONS = {
+  TEXT: process.env.VERTEX_TEXT_LOCATION || "global",
+};
+
 // Timeout (ms) para las llamadas a Gemini. Soportado por @google/genai via httpOptions.
 const GENAI_TIMEOUT_MS = Number(process.env.GENAI_TIMEOUT_MS) || 30000;
 
@@ -22,7 +28,7 @@ const GENAI_TIMEOUT_MS = Number(process.env.GENAI_TIMEOUT_MS) || 30000;
 // no es leida por el SDK (variable muerta, conservada solo por compatibilidad).
 export const MODELS = {
   // Chatbot de texto y analisis de reseñas
-  TEXT: process.env.VERTEX_TEXT_MODEL || "gemini-3.1-flash-lite",
+  TEXT: process.env.VERTEX_TEXT_MODEL || "gemini-3.1-flash-lite-preview",
   // Analisis multimodal del rostro (describeFace) — distinto del chatbot
   VISION: process.env.VERTEX_VISION_MODEL || "gemini-3.5-flash",
   // Generacion de la imagen del corte
@@ -30,25 +36,32 @@ export const MODELS = {
     process.env.GEMINI_IMAGE_MODEL ||
     process.env.VERTEX_IMAGE_MODEL ||
     "gemini-3-pro-image-preview",
-  LIVE: process.env.VERTEX_LIVE_MODEL || "gemini-3.1-flash-live",
+  LIVE: process.env.VERTEX_LIVE_MODEL || "gemini-live-2.5-flash-native-audio",
+  // Resumen barato de las respuestas de voz para persistir historial sin
+  // inflar tokens del Live. Modelo ligero y rapido.
+  SUMMARY: process.env.VERTEX_SUMMARY_MODEL || "gemini-2.5-flash-lite",
 };
 
-// Singleton perezoso: se crea en el primer uso real, no al importar el modulo.
-let _genai = null;
+// Singletons perezosos cacheados por region. Cada region = un cliente Vertex,
+// porque `location` se fija al construir GoogleGenAI y no se puede cambiar por
+// llamada. Permite usar `global` (TEXT 3.x) y `us-central1` (LIVE) a la vez.
+const _clients = new Map();
 
 /**
- * Devuelve el cliente GoogleGenAI compartido (Vertex AI + ADC).
- * Se instancia una sola vez para todo el servidor.
+ * Devuelve el cliente GoogleGenAI para una region (Vertex AI + ADC).
+ * Se instancia uno por region y se reutiliza. Sin argumento usa GCP_LOCATION.
+ * @param {string} [location] region Vertex (ej. "global", "us-central1")
  */
-export const getGenAI = () => {
-  if (_genai) return _genai;
-  _genai = new GoogleGenAI({
+export const getGenAI = (location = GCP_LOCATION) => {
+  if (_clients.has(location)) return _clients.get(location);
+  const client = new GoogleGenAI({
     vertexai: true,
     project: GCP_PROJECT,
-    location: GCP_LOCATION,
+    location,
     httpOptions: { timeout: GENAI_TIMEOUT_MS },
   });
-  return _genai;
+  _clients.set(location, client);
+  return client;
 };
 
 /**

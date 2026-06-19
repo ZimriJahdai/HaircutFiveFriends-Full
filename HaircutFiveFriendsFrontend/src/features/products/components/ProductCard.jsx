@@ -1,3 +1,5 @@
+import { FavoriteButton } from '../../favorites/components/FavoriteButton.jsx';
+
 const CATEGORY_LABELS = {
   SHAMPOO: 'Shampoo',
   WAX: 'Cera',
@@ -16,13 +18,20 @@ const formatMoney = (value) => {
   }).format(numeric);
 };
 
-export const ProductCard = ({ product, mode = 'client', onEdit, onDelete }) => {
+export const ProductCard = ({ product, mode = 'client', onEdit, onDelete, userPoints = 0, onRedeem }) => {
   const isInactive = product.status === 'inactive';
   const canEdit = mode === 'admin' && (onEdit || onDelete);
 
   return (
     <div className="relative rounded-2xl border border-[#2A2A2A] bg-[#111] overflow-hidden shadow-[0_0_0_1px_rgba(201,168,76,0.08)] transition-transform hover:-translate-y-0.5">
       <div className="relative h-48 bg-[#181818] overflow-hidden">
+        {mode === 'client' && (
+          <FavoriteButton
+            id={product._id || product.id}
+            typeFavorite="PRODUCT"
+            className="absolute top-3 right-3 z-10"
+          />
+        )}
         {product.image ? (
           <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
         ) : (
@@ -88,6 +97,36 @@ export const ProductCard = ({ product, mode = 'client', onEdit, onDelete }) => {
             </div>
           )}
         </div>
+
+        {mode === 'client' && product.pointsPrice > 0 && (
+          <div className="mt-4 pt-3 border-t border-[#222]">
+            {product.stock <= 0 ? (
+              <button
+                type="button"
+                className="w-full bg-[#2A1515] border border-[#5A2020] text-[#E88] text-[12px] font-bold py-2 px-4 rounded-xl cursor-not-allowed"
+                disabled
+              >
+                Agotado
+              </button>
+            ) : userPoints < product.pointsPrice ? (
+              <button
+                type="button"
+                className="w-full bg-zinc-900 border border-zinc-800 text-zinc-500 text-[12px] font-bold py-2 px-4 rounded-xl cursor-not-allowed"
+                disabled
+              >
+                Puntos insuficientes ({product.pointsPrice} pts)
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="w-full bg-[#00D2C4] hover:bg-[#00E5D5] text-[#0A0A0A] text-[12px] font-bold py-2 px-4 rounded-xl transition-all duration-200"
+                onClick={onRedeem}
+              >
+                Canjear Producto
+              </button>
+            )}
+          </div>
+        )}
 
         {canEdit && onDelete && (
           <div className="mt-4 pt-3 border-t border-[#222] flex justify-end">

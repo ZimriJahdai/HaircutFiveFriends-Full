@@ -57,6 +57,16 @@ export default function NavbarClient() {
             Productos
           </NavLink>
 
+          <NavLink to="/client/facturas" className={navLinkClass}>
+            <i className="ti ti-file-text text-base" />
+            Facturas
+          </NavLink>
+
+          <NavLink to="/client/probar-corte" className={navLinkClass}>
+            <i className="ti ti-camera text-base" />
+            Probar corte
+          </NavLink>
+
           <NavLink to="/client/galeria" className={navLinkClass}>
             <i className="ti ti-photo text-base" />
             Estilos
@@ -70,6 +80,11 @@ export default function NavbarClient() {
                 {favCount > 99 ? '99+' : favCount}
               </span>
             )}
+          </NavLink>
+
+          <NavLink to="/client/resenas" className={navLinkClass}>
+            <i className="ti ti-star text-base" />
+            Reseñas
           </NavLink>
 
           <NavLink to="/client/reservar" className={navLinkClass}>

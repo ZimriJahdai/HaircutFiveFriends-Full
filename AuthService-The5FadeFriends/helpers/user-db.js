@@ -411,6 +411,36 @@ export const findUserByPasswordResetToken = async (token) => {
   }
 };
 
+export const updateUserProfile = async (userId, { name, phone, profilePicture }) => {
+  const transaction = await User.sequelize.transaction();
+
+  try {
+    await User.update(
+      { Name: name },
+      { where: { Id: userId }, transaction }
+    );
+
+    const profileUpdates = { Phone: phone };
+    if (profilePicture !== undefined) {
+      profileUpdates.Imagen = profilePicture;
+    }
+
+    await UserProfile.update(
+      profileUpdates,
+      { where: { UserId: userId }, transaction }
+    );
+
+    await transaction.commit();
+
+    const updatedUser = await findUserById(userId);
+    return updatedUser;
+  } catch (error) {
+    await transaction.rollback();
+    console.error('Error actualizando perfil:', error);
+    throw new Error('Error al actualizar perfil');
+  }
+};
+
 export const updateUserPassword = async (userId, hashedPassword) => {
   const transaction = await User.sequelize.transaction();
 

@@ -1,4 +1,4 @@
-import { getGenAI, MODELS } from '../../configs/genai.js';
+import { getGenAI, MODELS, LOCATIONS } from '../../configs/genai.js';
 import { barberTools, systemInstruction } from './tools.js';
 import { executeFunctionCall } from './barber-tools-executor.js';
 
@@ -25,7 +25,7 @@ export const handleChatAI = async (currentHistory, input, authToken) => {
         const userMessage = { role: 'user', parts: [{ text: input }] };
         const messages = [...currentHistory, userMessage];
 
-        const ai = getGenAI();
+        const ai = getGenAI(LOCATIONS.TEXT);
         const modelName = MODELS.TEXT;
         const config = {
             systemInstruction: `${systemInstruction}\n\n${historyNote}\nRegla estricta: nunca digas que no tienes historial.`,
@@ -53,9 +53,14 @@ export const handleChatAI = async (currentHistory, input, authToken) => {
                 }]
             };
 
+            // Gemini 3.x exige devolver el `thoughtSignature` tal cual vino en el
+            // part del functionCall. `response.functionCalls`.
+            const modelTurn = response.candidates?.[0]?.content
+                ?? { role: 'model', parts: [{ functionCall: call }] };
+
             const updatedMessages = [
                 ...messages,
-                { role: 'model', parts: [{ functionCall: call }] },
+                modelTurn,
                 functionResponsePart
             ];
 

@@ -26,9 +26,13 @@ pnpm dev          # or: nodemon index.js / nodemon src/index.js
 # Production
 pnpm start
 
-# Lint
+# Lint (only AuthService, AiServiceClient, HaircutFiveFriendsFrontend have it)
 pnpm lint
 pnpm lint:fix
+
+# Format (AuthService only — uses prettier)
+pnpm format
+pnpm format:check
 
 # Frontend build
 pnpm build
@@ -36,6 +40,10 @@ pnpm preview
 ```
 
 **AiServiceServer** entry point is `src/index.js` (not `index.js`).
+
+**No automated tests exist.** Every backend `test` script is a placeholder (`echo "Error: no test specified" && exit 1`); `HaircutFiveFriends` and `AiServiceServer` have no `lint` script either.
+
+**AuthService scripts are shell-specific:** `dev` uses Windows `set NODE_ENV=development`, but `start` uses bash-style `NODE_ENV=production ...` which fails on Windows PowerShell/cmd. On Windows, run `cross-env` or set the var manually before `node index.js`.
 
 ## Environment Variables
 
@@ -122,5 +130,24 @@ This repository includes an Obsidian vault located in the `.obsidian-notes/` dir
   tags: [haircutfivefriends, documentacion/backend o frontend o auth]
   date: YYYY-MM-DD
   ---
-  
+
+## Protocolo de inicio obligatorio
+Antes de cualquier acción, lee: .obsidian-notes/AGENT-CONTEXT.md
+Luego lee el log más reciente en: .obsidian-notes/logs/
+No leas archivos fuente hasta saber en qué servicio trabajamos hoy.
+
+INICIO DE SESIÓN — Protocolo de contexto mínimo
+
+1. Lee .obsidian-notes/AGENT-CONTEXT.md  ← OBLIGATORIO PRIMERO
+2. Lee .obsidian-notes/logs/ del día más reciente (si existe)
+3. NO leas ningún archivo fuente hasta que el usuario te indique
+   en qué servicio o feature trabajaremos hoy
+
+Solo entonces pregunta: ¿En qué servicio trabajamos hoy?
+Y lee ÚNICAMENTE los archivos de ese servicio que necesites.
+
+Al terminar la sesión, actualiza:
+- AGENT-CONTEXT.md si algo estructural cambió
+- Crea logs/YYYY-MM-DD.md con solo lo que tocaste hoy
+
 @AGENTS.md

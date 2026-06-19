@@ -1,587 +1,221 @@
-# MASTER PROMPT — Refactor real de AiServiceClient + AiServiceServer
+# Tarea: Fusionar `AiServiceClient` dentro de `HaircutFiveFriendsFrontend` (carpeta única)
 
-## Repo objetivo
+Eres **Claude Code** trabajando en el monorepo `HaircutFiveFriends-Full` (microservicios).
 
-Trabaja sobre este repositorio:
+**Objetivo final, no negociable:** las funciones de IA (Chat, Voz, Visión, Reseñas IA) viven
+**dentro** del frontend normal `HaircutFiveFriendsFrontend` (puerto 5173) como un **feature module**
+nuevo, navegables desde su **sidebar** vía **react-router**, reutilizando el **mismo login / mismo
+token**. Al terminar y verificar, **la carpeta `AiServiceClient/` desaparece del repo**.
 
-`Narizaico-code/HaircutFiveFriends`
-
-El objetivo principal es refactorizar y mejorar **solo**:
-
-* `AiServiceClient`
-* `AiServiceServer`
-
-No refactorices otros proyectos del monorepo salvo que sea necesario para entender contratos, endpoints o integración entre servicios.
+> Esto es **migración real de código** (merge), NO iframe, NO link-out, NO segunda app.
+> No hay "Plan B". Hay un solo destino: una sola carpeta frontend.
 
 ---
 
-# Regla principal: no alucinar
-
-No inventes rutas, archivos, modelos Gemini, variables de entorno, endpoints ni arquitectura.
-
-Antes de crear cualquier archivo nuevo:
-
-1. Verifica si ya existe una ubicación equivalente.
-2. Respeta la estructura actual del proyecto.
-3. Si propones una nueva carpeta o archivo, justifica por qué es necesario.
-4. No uses nombres genéricos inventados si el proyecto ya tiene una convención distinta.
-
-No asumas que un modelo Gemini existe solo por su nombre. Verifícalo en documentación oficial actualizada antes de cambiarlo.
+## Regla de oro
+- Editas **solo** `HaircutFiveFriendsFrontend/`. Lees `AiServiceClient/` como **fuente**.
+- **No toques** `AuthService-The5FadeFriends`, `HaircutFiveFriends`, `AiServiceServer`.
+  El backend IA (3007) ya valida el **mismo JWT de AuthService** → el token del frontend normal **ya sirve**.
+- No rompas nada del frontend normal. Preserva lógica existente. Componentes desacoplados,
+  archivos cortos, una responsabilidad por archivo. Sigue la convención de carpetas ya existente.
+- **Rama nueva** + commits pequeños y atómicos. `pnpm build` debe pasar antes de cerrar.
+- El borrado de `AiServiceClient/` es el **último paso**, solo tras verificar que todo funciona en el destino.
 
 ---
 
-# Contexto real del repo
+## Mapa del ecosistema (confirmado en código)
 
-El repo tiene varios proyectos. Para esta tarea enfócate en:
+| Servicio | Puerto | Rol |
+| :-- | :-: | :-- |
+| `AuthService-The5FadeFriends` | 3005 | Auth (JWT, PostgreSQL) |
+| `HaircutFiveFriends` | 3006 | API negocio (MongoDB) |
+| `AiServiceServer` | 3007 | Backend IA (chat/voz/visión/reseñas, MongoDB + Vertex) |
+| `HaircutFiveFriendsFrontend` | 5173 | **Frontend único (destino)** |
+| `AiServiceClient` | 5174 | Frontend IA (**fuente — se elimina al final**) |
 
-```txt
-AiServiceClient/
-AiServiceServer/
+---
+
+## Convención de carpetas del destino (RESPÉTALA)
+
+El frontend normal usa **feature modules**:
+
+```
+HaircutFiveFriendsFrontend/src/
+  app/        main.jsx, App.jsx, router/{AppRouters,ProtectedRoute,RoleGuard}.jsx, pages/, layouts/
+  features/<dominio>/
+      components/   pages/   hooks/   store/
+  shared/
+      api/{api.js, auth.js, ...}   components/layout/{DashboardLayout,Sidebar,Navbar}.jsx   utils/
 ```
 
-En `AiServiceClient` ya existe una estructura tipo:
+→ Todo lo de IA entra como **`src/features/ai/`** con esa misma forma:
 
-```txt
-AiServiceClient/src/
-  app/
-    components/
-    constants/
-    hooks/
-    layouts/
-    pages/
-    routes/
-    services/
-    utils/
-    worklets/
-    App.jsx
-    main.jsx
-  styles/
-    index.css
+```
+src/features/ai/
+  pages/        ChatPage.jsx  VoicePage.jsx  VisionPage.jsx  ReviewsPage.jsx  AiDashboard.jsx
+  components/   ChatWindow.jsx  ChatForm.jsx  ChatHeader.jsx  ChatFooter.jsx  ...
+  hooks/        useChat.js  useVoiceSession.js
+  services/     chatApi.js  visionApi.js  arApi.js          (NO authApi.js del AI client)
+  constants/    chat.js  voice.js  vision.js  ar.js
+  lib/          aiAuth.js                                   (token desde el store normal)
+  worklets/     pcm-worklet.js
+  styles/       ai.module.css  (o aislado, ver A.3)
 ```
 
-En `AiServiceServer` ya existe una estructura tipo:
-
-```txt
-AiServiceServer/
-  configs/
-  middlewares/
-  services/
-  src/
-    ai/
-    aiHaircut/
-    aiHaircutImage/
-    auth/
-    chats/
-    reviews/
-    vision/
-    index.js
-```
-
-Respeta esas carpetas antes de crear otras.
+**NO portar del AI client:** `AppShell`, `SidebarNav`, `UserMenu`, `LoginPage`, `AppRoutes`,
+`NotFound`, `authStorage.js` (token `todogemini_auth`), `authApi.js`. El destino ya aporta
+layout, sidebar, login, auth y router.
 
 ---
 
-# Seguridad obligatoria
+## Lee PRIMERO (confírmalo en código, no asumas)
 
-Hay archivos `.env` visibles en el repo. No imprimas su contenido.
+**Destino:**
+- `src/app/router/AppRouters.jsx` — **react-router-dom v7** (¡no v6!); guards por rol.
+  ⚠️ El AI client usa **react-router v6.30**. NO copies su routing tal cual: adáptalo a la API de
+  **v7** que ya usa el destino (revisa cómo declara rutas/`Outlet`/`useNavigate` el `AppRouters.jsx` actual).
+- `src/app/router/ProtectedRoute.jsx`, `src/app/router/RoleGuard.jsx`
+- `src/shared/components/layout/DashboardLayout.jsx` — Sidebar + Navbar + `<Outlet/>`
+- `src/shared/components/layout/Sidebar.jsx` — `NAV_CONFIG` por rol, iconos Tabler `ti ti-*`, `NavLink`
+- `src/features/auth/store/authStore.js` — Zustand persistido `auth-storage`: `token`, `refreshToken`, `user`, `isAuthenticated`
+- `src/shared/api/api.js` — axios con `Authorization: Bearer <token>` + refresh
+- `src/app/pages/ClientHome.jsx`, `src/features/client/pages/Home.jsx`
 
-Audita esto inmediatamente:
-
-* Si `.env` contiene secretos reales, no los copies en logs ni reportes.
-* Asegúrate de que `.env` esté en `.gitignore`.
-* Crea o corrige `.env.example` con nombres de variables, pero sin valores reales.
-* Si detectas credenciales reales trackeadas, reporta que deben rotarse manualmente.
-* No intentes “arreglar” una credencial expuesta cambiándola por otra inventada.
-
----
-
-# Fase 0 — Análisis inicial obligatorio
-
-Antes de tocar archivos:
-
-1. Lee la estructura actual de `AiServiceClient` y `AiServiceServer`.
-
-2. Lee:
-
-   * `AiServiceClient/package.json`
-   * `AiServiceClient/vite.config.js`
-   * `AiServiceClient/src/app/main.jsx`
-   * `AiServiceClient/src/app/App.jsx`
-   * `AiServiceClient/src/styles/index.css`
-   * `AiServiceServer/package.json`
-   * `AiServiceServer/src/index.js`
-   * archivos dentro de `AiServiceServer/configs`
-   * archivos dentro de `AiServiceServer/middlewares`
-   * archivos dentro de `AiServiceServer/services`
-   * archivos relevantes dentro de `AiServiceServer/src/ai`
-   * archivos relevantes dentro de `AiServiceServer/src/reviews`
-   * archivos relevantes dentro de `AiServiceServer/src/vision`
-   * `AiServiceServer/MIGRATION_PLAN_ADC.md`
-
-3. Excluye carpetas generadas:
-
-   * `node_modules`
-   * `.git`
-   * `dist`
-   * `build`
-   * `coverage`
-
-4. Entrega un resumen antes de modificar:
-
-   * Arquitectura real detectada.
-   * Cómo se comunica el cliente con el servidor.
-   * Qué endpoints principales usa el cliente.
-   * Qué partes del servidor llaman a Gemini.
-   * Estado aparente de Tailwind.
-   * Estado aparente de la migración a Google Cloud / ADC / Vertex.
-   * Riesgos encontrados.
-   * Plan de cambios por fases.
-
-No modifiques archivos hasta entregar este resumen.
+**Fuente (AI client):**
+- `src/app/routes/AppRoutes.jsx`, `src/app/layouts/AppShell.jsx`
+- `src/app/pages/{ChatPage,VoicePage,VisionPage,ReviewsPage,Dashboard}.jsx`
+- `src/app/components/*`, `src/app/hooks/{useChat,useVoiceSession}.js`
+- `src/app/services/{chatApi,visionApi,arApi,authApi}.js`, `src/app/constants/{chat,voice,vision,ar}.js`
+- `src/app/utils/{authStorage,messageUtils,handleAuthError}.js`, `src/app/worklets/pcm-worklet.js`
+- `src/styles/index.css` (design system: `@theme` + **clases globales genéricas**)
 
 ---
 
-# Fase 1 — Auditoría del servidor
+## Pasos de la migración
 
-Audita `AiServiceServer`.
+### 1 — Auth unificada + cliente HTTP compartido (un solo token)
+- Borra toda dependencia de `todogemini_auth` / `authStorage.getAuth()` / `authApi.js`.
+- **HTTP:** las llamadas IA hoy usan `fetch` crudo (`chatApi.js`, `visionApi.js`). **Migrarlas al cliente
+  axios compartido `src/shared/api/api.js`** del destino para heredar `Authorization: Bearer` +
+  **refresh token** + manejo 401 automático. Reescribe `chatApi.js`/`visionApi.js` como módulos que
+  usan esa instancia axios (apuntando al base IA, ver paso 2). Elimina `handleAuthError.js` (el axios
+  interceptor del destino ya maneja 401).
+- **WS no pasa por axios:** para Voz (`useVoiceSession`) y AR, crea
+  `src/features/ai/lib/aiAuth.js` que lea `useAuthStore.getState().token` y devuelva el token para
+  inyectarlo en la conexión WS (query/subprotocol según espere el server).
+- `userId` del chat: mapea el id real del `user` del store. **Confirma el campo** (`user.uid` / `user._id` / `user.id`)
+  leyendo `authStore.js` y cómo lo llena el login — no adivines.
 
-Busca bugs como:
+### 2 — Endpoints + WebSocket (env nuevas, sin colisión)
+⚠️ El AI client lee `VITE_API_BASE_URL`, `VITE_WS_BASE_URL`, `VITE_AR_BASE_URL`, `VITE_AR_WS_URL`,
+y con localhost cae a **rutas relativas vía proxy de Vite** (`/api/chat`, `/ws`, `/api/vision`).
+El destino **ya usa `VITE_API_URL` (3006) y `VITE_AUTH_URL` (3005)** para otros backends → **NO reuses
+esos nombres**. Crea env **prefijadas `VITE_AI_*`** y reescribe los constants para apuntar **absoluto**
+(elimina la lógica localhost→relativa, el destino no tendrá ese proxy):
 
-* Promesas sin `await`.
-* Errores async no manejados.
-* `try/catch` que solo hacen `console.log` o silencian errores.
-* Validación insuficiente de `req.body`, `req.params`, `req.query`.
-* Endpoints que aceptan datos arbitrarios.
-* Errores HTTP inconsistentes.
-* WebSockets sin cleanup correcto.
-* Listeners no removidos.
-* Timeouts ausentes en llamadas externas.
-* Reintentos mal implementados o inexistentes.
-* Variables de entorno usadas sin validación.
-* Código que usa modelos Gemini hardcodeados sin validación.
-* Uso mezclado de API Key, ADC, Vertex, Gemini Developer API o Google Cloud sin una decisión clara.
+- En `HaircutFiveFriendsFrontend/.env`:
+  - `VITE_AI_API_URL=http://localhost:3007/api`   → chat `…/chat`, vision `…/vision`
+  - `VITE_AI_WS_URL=ws://localhost:3007/ws`        → voz (**confirma el path WS real en `AiServiceServer/src/ai/live-api.js`**)
+  - `VITE_AI_AR_URL=http://localhost:8000`         → backend AR (servicio aparte, **ver nota AR**)
+  - `VITE_AI_AR_WS_URL=ws://localhost:8000/ws/camera`
+- **Paths exactos a confirmar en el server** antes de fijarlos: `/api/chat/:userId`, `/api/vision`,
+  path del WS de voz, y `/ws/camera` del AR.
+- Reescribe `features/ai/constants/{chat,voice,vision,ar}.js` con las env `VITE_AI_*`. Documenta
+  todas las llaves en `README` / `.env.example` del destino.
 
-Busca malas prácticas como:
+> **Nota AR (incluido en la migración):** AR NO vive en 3007, usa un backend **aparte en `:8000`**.
+> ANTES de portar AR, un subagente debe **verificar que ese servicio `:8000` existe y se usa**
+> (búscalo en el repo / pregunta). Si existe → porta `arApi.js`, `ar.js`, constants AR con las env
+> `VITE_AI_AR_*`. Si NO existe → reporta y deja AR fuera con un TODO, no inventes el endpoint.
 
-* Lógica de negocio dentro de controllers.
-* Servicios demasiado largos o con varias responsabilidades.
-* Helpers duplicados.
-* Configuración repetida.
-* Constantes mágicas.
-* Respuestas de error que filtran detalles internos.
-* Dependencias instaladas pero no usadas.
+### 3 — CSS sin colisiones (CRÍTICO)
+- `AiServiceClient/src/styles/index.css` define clases **globales genéricas**
+  (`.card .page .grid .sidebar .nav .avatar .topbar .bento ...`) que **chocan** con el destino.
+  **Prohibido** importarlo global tal cual.
+- Estrategia (elige y justifica): **CSS Module** por feature **o** prefijo `.ai-*` + contenedor `.ai-scope`
+  **o** anidar bajo `.ai-scope { ... }`. Mantén consistencia.
+- Conserva tokens `@theme` del AI client **solo** si no pisan los del destino; si chocan, renómbralos.
+  La paleta ya es compatible (oro `#C9A84C`, dark, crema).
 
-Por cada problema:
+### 4 — Rutas + Sidebar (la navegación pedida)
+- **Ambos roles** (admin y cliente) acceden a IA. Monta las páginas bajo el router existente,
+  dentro de `ProtectedRoute` + `RoleGuard`, en los dos árboles:
+  - Admin: `/dashboard/ia/chat`, `/dashboard/ia/voz`, `/dashboard/ia/vision`, `/dashboard/ia/resenas`
+  - Cliente: `/client/ia/chat`, `/client/ia/voz`, `/client/ia/vision`, `/client/ia/resenas`
+- **Sin landing.** La entrada "IA" del sidebar lleva **directo a Chat** (`.../ia/chat`).
+  Voz/Visión/Reseñas son sub-rutas accesibles (sub-items de sidebar o tabs dentro del módulo).
+  **NO portes** el `Dashboard.jsx` del AI client (se descarta).
+- Añade entradas al `NAV_CONFIG` del `Sidebar.jsx` en **ambos roles**, respetando su patrón
+  (`NavLink`, iconos Tabler: `ti-message-chatbot`, `ti-microphone`, `ti-scan-eye`, `ti-star`).
 
-* Indica archivo.
-* Explica qué está mal.
-* Explica por qué importa.
-* Aplica un fix pequeño.
-* Reporta qué cambiaste.
+### 5 — Worklet
+- Copia `pcm-worklet.js` a `features/ai/worklets/` y arregla la ruta de carga del AudioWorklet
+  (debe resolver con Vite en el destino, p. ej. `new URL('../worklets/pcm-worklet.js', import.meta.url)`).
 
----
-
-# Fase 2 — Auditoría Gemini / Google GenAI / Vertex / ADC
-
-Antes de cambiar código, busca documentación oficial actualizada.
-
-Verifica:
-
-* Uso actual de `@google/genai`.
-* Si todavía quedan restos de SDKs viejos o métodos viejos.
-* Si hay llamadas manuales `fetch` a Gemini que conviene reemplazar.
-* Si se usa `GoogleGenAI` correctamente.
-* Si el repo está intentando usar:
-
-  * Gemini Developer API con API Key
-  * Gemini en Google Cloud / Vertex / Enterprise con ADC
-  * una mezcla incompleta de ambas cosas
-
-Debes revisar especialmente:
-
-* `AiServiceServer/services/genaiService.js`
-* `AiServiceServer/src/ai`
-* `AiServiceServer/src/reviews`
-* `AiServiceServer/src/vision`
-* cualquier archivo que importe `@google/genai`
-* cualquier archivo que use `GEMINI_API_KEY`
-* cualquier archivo que use `GOOGLE_CLOUD_PROJECT`
-* cualquier archivo que use `GOOGLE_CLOUD_LOCATION`
-* cualquier archivo que use `GOOGLE_GENAI_USE_VERTEXAI`
-* cualquier archivo que use `GOOGLE_GENAI_USE_ENTERPRISE`
-* cualquier archivo que abra WebSocket hacia Gemini
-
-## Modelos Gemini
-
-No cambies modelos a ciegas.
-
-Haz esto:
-
-1. Lista todos los modelos usados actualmente.
-2. Indica en qué archivo aparecen.
-3. Verifica si existen según documentación oficial actualizada.
-4. Si un modelo parece preview/experimental/deprecado/no disponible:
-
-   * No lo reemplaces silenciosamente.
-   * Propón alternativa documentada.
-   * Explica el impacto.
-5. Centraliza modelos en variables de entorno solo si mejora el proyecto.
-6. Documenta modelos en `.env.example`.
-
-## Migración Google Cloud / ADC
-
-El repo tiene un plan de migración a ADC. Verifica si se completó realmente.
-
-Revisa:
-
-* Si todavía hay API keys en uso.
-* Si `GoogleGenAI` se inicializa una sola vez o en varios archivos.
-* Si se usa ADC correctamente.
-* Si hay project/location configurados de forma consistente.
-* Si el WebSocket usa auth compatible con el backend elegido.
-* Si hay variables viejas y nuevas coexistiendo sin necesidad.
-* Si el servidor puede iniciar cuando faltan variables obligatorias.
-* Si los errores son claros cuando falta configuración.
-
-No declares “migración completada” hasta confirmar que:
-
-* todas las rutas Gemini usan el mismo enfoque,
-* no quedan llamadas incompatibles,
-* los tests o verificación manual pasan.
+### 6 — Limpieza final (destructivo — solo tras verificar)
+- En **esta misma rama**, una vez que **todos** los criterios de aceptación pasen y `pnpm build`
+  esté verde: elimina la carpeta `AiServiceClient/` completa y cualquier referencia a ella
+  (scripts, docs raíz, `.env`, proxys, `CLAUDE.md`). Hazlo en un **commit separado** dentro de la rama.
 
 ---
 
-# Fase 3 — Refactor del servidor
+## Orquestación con SUBAGENTES (obligatorio)
 
-Aplica cambios pequeños y seguros.
+No hagas todo en un solo hilo. Reparte en subagentes especializados y **revisa archivo por archivo
+cada cambio**. Sugerencia de fan-out:
 
-Prioridades:
+1. **Agente Explore (read-only):** inventario completo. Lista cada archivo de `AiServiceClient/src`,
+   sus imports, qué token/endpoint/WS usa, y mapea destino exacto en `features/ai/`. Devuelve tabla
+   `origen → destino → dependencias → riesgos`. No edita.
+2. **Agente Auth+Endpoints:** implementa paso 1 y 2 (aiAuth, env, constants). Reescribe services.
+3. **Agente UI/CSS:** implementa paso 3 y 5 (aislamiento CSS, worklet, copia componentes/pages/hooks).
+4. **Agente Router/Sidebar:** implementa paso 4 (rutas + NAV_CONFIG + guards).
+5. **Agente Revisor (read-only):** tras cada agente, revisa **cada archivo tocado** contra los
+   criterios de aceptación; reporta regresiones, imports rotos, clases CSS sin aislar, tokens viejos.
 
-1. Separar configuración de lógica.
-2. Separar controllers de servicios.
-3. Mantener archivos razonablemente cortos.
-4. Evitar crear carpetas nuevas si las existentes sirven.
-5. Extraer helpers repetidos.
-6. Normalizar errores.
-7. Validar inputs.
-8. Evitar filtrar secretos.
-9. Mantener compatibilidad con el cliente.
-
-Si un archivo está demasiado grande:
-
-* Divide por responsabilidad real.
-* No crees abstracciones innecesarias.
-* No rompas imports sin actualizar todo.
+**Reglas para los subagentes:**
+- Cada uno reporta de vuelta: archivos creados/editados, decisiones, y qué quedó pendiente.
+- Ningún subagente borra `AiServiceClient/` (eso es el paso 6, manual, con confirmación).
+- Tras cada bloque de cambios: correr verificación (abajo) y **no avanzar** si rompe el build.
 
 ---
 
-# Fase 4 — Auditoría del cliente
+## Tests y verificación (por cada cambio)
 
-Audita `AiServiceClient`.
+> El repo **no tiene tests automáticos** (los `test` scripts son placeholders). La verificación es:
 
-Ten en cuenta que el cliente ya usa React + Vite y ya parece tener Tailwind instalado.
-
-Busca:
-
-* Fetch/axios sin `AbortController` cuando aplica.
-* Requests que siguen vivos al desmontar componentes.
-* `useEffect` con dependencias incorrectas.
-* Estado global innecesario.
-* Props drilling excesivo.
-* Lógica de negocio dentro de componentes visuales.
-* Componentes demasiado largos.
-* CSS global enorme que podría convertirse a componentes/Tailwind.
-* Manejo inconsistente de loading/error/success.
-* Botones sin estado disabled durante requests.
-* Inputs sin label o accesibilidad básica.
-* Falta de feedback visual.
-* Renders innecesarios.
-
-Por cada problema:
-
-* Indica archivo.
-* Explica el problema.
-* Aplica fix.
-* No cambies diseño y lógica al mismo tiempo si es un cambio grande.
+- `pnpm build` en `HaircutFiveFriendsFrontend/` **verde** tras cada bloque de cambios.
+- `pnpm lint` (existe en el destino) sin errores nuevos.
+- Si introduces lógica nueva aislable (p. ej. `aiAuth`, `messageUtils`), añade un **test ligero**
+  (Vitest) solo si el destino ya lo soporta; si no, deja la verificación manual documentada.
+- **Smoke manual** (con 3005/3006/3007 arriba): login normal → entra a `/dashboard/ia` → Chat
+  responde con token del store → Voz conecta WS y carga worklet → Visión y Reseñas cargan → ninguna
+  vista existente del frontend normal cambió de estilo.
 
 ---
 
-# Fase 5 — Tailwind y rediseño visual
-
-No digas “migrar a Tailwind” sin verificar.
-
-Primero confirma:
-
-* Si `tailwindcss` está instalado.
-* Si `@tailwindcss/vite` está configurado en `vite.config.js`.
-* Si `src/styles/index.css` importa Tailwind con `@import "tailwindcss";`.
-* Si Tailwind realmente funciona en build/dev.
-* Si hay CSS viejo que todavía se usa.
-
-Si Tailwind ya está instalado:
-
-* No reinstales dependencias innecesarias.
-* No agregues `tailwind.config.js` solo por costumbre si Tailwind v4 no lo necesita.
-* No agregues PostCSS/autoprefixer si el setup actual con Vite plugin funciona.
-* Enfócate en limpiar CSS global, mejorar componentes y usar utilidades Tailwind.
-
-Rediseño esperado:
-
-* UI moderna, limpia y profesional.
-* Mobile-first.
-* Estados hover/focus/active/disabled.
-* Buen contraste.
-* Layout estable.
-* Componentes reutilizables.
-* Accesibilidad básica.
-
-Puedes crear o mejorar componentes solo si el proyecto realmente los necesita:
-
-* Button
-* Input
-* Textarea
-* Card
-* Modal
-* Badge
-* Spinner
-* Alert
-* EmptyState
-
-No crees una librería de componentes gigante si solo se usan 2 o 3 piezas.
-
----
-
-# Fase 6 — Testing
-
-Primero detecta si ya hay framework de tests.
-
-Revisa scripts en `package.json`.
-
-Si no existen tests:
-
-## Server
-
-Agrega testing de forma mínima y útil.
-
-Para Node/Express moderno:
-
-* Usa Vitest o Jest, el que encaje mejor con el setup ESM.
-* Usa Supertest para endpoints HTTP.
-* Mockea Gemini / Google GenAI.
-* No hagas llamadas reales a Gemini en tests.
-
-Tests mínimos:
-
-* Endpoint crítico con payload válido.
-* Payload inválido devuelve 400.
-* Error Gemini 429 se traduce a respuesta controlada.
-* Error Gemini 500/503 se maneja sin crashear.
-* No se filtran secretos ni stack traces al cliente.
-
-## Client
-
-Para Vite + React:
-
-* Usa Vitest + Testing Library si no hay framework existente.
-* Mockea servicios de API.
-* No dependas del servidor real.
-
-Tests mínimos:
-
-* Render básico de páginas principales.
-* Interacción principal.
-* Estado loading.
-* Estado success.
-* Estado error.
-* Request abortado si el componente se desmonta durante una llamada.
-
-Actualiza scripts:
-
-* `test`
-* `test:watch` si aplica
-* `coverage` solo si lo configuras realmente
-
----
-
-# Fase 7 — Verificación manual y automática
-
-Después de cada fase ejecuta lo que exista o lo que agregaste:
-
-Cliente:
-
-```bash
-cd AiServiceClient
-npm install
-npm run lint
-npm run build
-npm test
-```
-
-Servidor:
-
-```bash
-cd AiServiceServer
-npm install
-npm run lint
-npm test
-npm run dev
-```
-
-Si algún comando no existe:
-
-* No inventes que pasó.
-* Reporta “no existe script”.
-* Propón agregarlo si aporta.
-
-Si un comando falla:
-
-* Copia el error relevante.
-* Explica si bloquea o no.
-* Corrige si está dentro del scope.
-
----
-
-# Reglas de edición
-
-En cada cambio:
-
-* Haz commits conceptuales pequeños, aunque no puedas commitear.
-* Cambia pocos archivos por paso.
-* No mezcles refactor, diseño y tests en el mismo cambio grande.
-* No cambies endpoints sin actualizar cliente y tests.
-* No borres lógica sin buscar referencias.
-* No imprimas secretos.
-* No dejes código comentado muerto.
-* Usa nombres consistentes con el repo.
-* Prefiere named exports si ya es consistente con el proyecto.
-* Mantén imports ordenados.
-* Evita archivos enormes.
-* Si un archivo crece demasiado, divide por responsabilidad real.
-
----
-
-# Reporte obligatorio al terminar cada fase
-
-Entrega:
-
-```txt
-FASE X — Resultado
-
-Archivos editados:
-- ...
-
-Archivos creados:
-- ...
-
-Archivos eliminados:
-- ...
-
-Cambios realizados:
-- ...
-
-Verificación:
-- comando: resultado
-- comando: resultado
-
-Pendientes / riesgos:
-- ...
-```
-
----
-
-# Reporte final
-
-Al terminar todo, entrega:
-
-## 1. Bugs corregidos
-
-Tabla:
-
-* Bug
-* Archivo
-* Causa raíz
-* Fix
-* Verificación
-
-## 2. Malas prácticas eliminadas
-
-Tabla:
-
-* Problema
-* Archivo
-* Cambio aplicado
-* Motivo
-
-## 3. Estado real de Gemini / Google Cloud
-
-Incluye:
-
-* SDK detectado.
-* SDK final usado.
-* Backend final usado:
-
-  * Gemini Developer API con API Key
-  * o Gemini en Google Cloud / Vertex / Enterprise con ADC
-* Variables de entorno finales.
-* Modelos usados.
-* Modelos descartados o reemplazados.
-* Evidencia de que la migración ADC quedó completa o no.
-
-## 4. Cambios de rendimiento
-
-Incluye:
-
-* Cliente Gemini singleton o no.
-* Retry/backoff.
-* Timeouts.
-* Streaming o motivo para no implementarlo.
-* Reducción de llamadas innecesarias.
-* Manejo de errores.
-
-## 5. Cambios del cliente
-
-Incluye:
-
-* Componentes refactorizados.
-* Hooks/services creados o mejorados.
-* CSS eliminado o reducido.
-* Uso real de Tailwind.
-* Mejoras responsive.
-* Mejoras de accesibilidad.
-
-## 6. Tests
-
-Incluye:
-
-* Tests creados.
-* Tests modificados.
-* Qué cubren.
-* Qué se mockeó.
-* Resultado de los comandos.
-
-## 7. Seguridad
-
-Incluye:
-
-* Estado de `.env`.
-* Estado de `.env.example`.
-* Si hay secretos expuestos.
-* Qué debe rotarse manualmente.
-* Qué quedó protegido.
-
-## 8. Deuda técnica pendiente
-
-Tabla:
-
-* Pendiente
-* Prioridad: alta/media/baja
-* Riesgo
-* Recomendación
-
-## 9. Estado final
-
-Di claramente:
-
-* Qué funciona.
-* Qué no se pudo verificar.
-* Qué requiere acción humana.
+## Criterios de aceptación
+- Login normal único → el sidebar muestra el grupo **IA** → navego a Chat/Voz/Visión/Reseñas
+  **dentro de la misma app** (mismo layout/sidebar, **sin segundo login**).
+- Servicios IA funcionan con el **token del store normal** (cero `todogemini_auth`).
+- Voz: WS a `VITE_AI_WS_URL`; AudioWorklet carga sin error de ruta.
+- CSS de IA **no altera** ninguna vista existente del destino.
+- `pnpm build` + `pnpm lint` OK. Rutas/roles actuales intactos.
+- `AiServiceClient/` eliminado y sin referencias colgantes.
+
+## Decisiones ya tomadas (NO vuelvas a preguntar)
+- **Roles:** IA para **admin y cliente** (rutas en ambos árboles, ver paso 4).
+- **Landing:** **sin landing**, "IA" → directo a Chat. Se descarta `Dashboard.jsx` del AI client.
+- **Borrado:** `AiServiceClient/` se elimina **en esta misma rama**, en commit separado, paso 6.
+- **`userId`:** lo resuelves tú leyendo `authStore.js` y el login (campo `user.id` / `user._id` / `user.uid`).
+  No es decisión del usuario — solo úsalo correcto y déjalo anotado en el log.
+- **AR:** **incluido** en la migración (backend aparte `:8000`). Verifica que el servicio exista antes
+  de portar; si no existe, AR queda con TODO (ver Nota AR, paso 2).
+- **HTTP:** las llamadas IA se migran al **axios compartido `shared/api/api.js`** (refresh token gratis).
+  No `fetch` crudo nuevo. WS sigue siendo WS nativo con token de `aiAuth`.
+- **react-router:** destino es **v7**; adapta el routing portado, no copies el v6 del AI client.
+
+## Cierre (obligatorio)
+- Log en `.obisidian-notes/logs/` (convención: `YYYY-MM-DD-<tema>.md`, frontmatter `tags`/`date`, enlaces `[[...]]`).
+- Actualiza `estructura/HaircutFiveFriendsFrontend.md` y `AGENT-CONTEXT.md` (rutas/env/deps nuevas,
+  baja de `AiServiceClient`).

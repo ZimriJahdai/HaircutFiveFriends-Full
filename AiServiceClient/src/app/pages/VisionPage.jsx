@@ -1,6 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { AR_WS_URL } from '../constants/ar.js';
-import { sendOverlayToAr } from '../services/arApi.js';
 import { recommendHaircuts } from '../services/visionApi.js';
 import { getAuth } from '../utils/authStorage.js';
 
@@ -118,11 +116,7 @@ export default function VisionPage() {
   const [faceSummary, setFaceSummary] = useState(null);
   const [recommendations, setRecommendations] = useState([]);
   const [generatedImage, setGeneratedImage] = useState('');
-  const [streamUrl, setStreamUrl] = useState('');
-  const [streamError, setStreamError] = useState('');
   const fileInputRef = useRef(null);
-  const streamUrlRef = useRef('');
-  const streamWsRef = useRef(null);
   const analyzeAbortRef = useRef(null);
   const summaryBlocks = buildSummaryBlocks(faceSummary);
 
@@ -134,55 +128,6 @@ export default function VisionPage() {
 
   // Aborta la peticion de analisis en vuelo al desmontar.
   useEffect(() => () => analyzeAbortRef.current?.abort(), []);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && window.location.protocol === 'https:' && AR_WS_URL.startsWith('ws://')) {
-      setStreamError('El modulo AR debe exponerse por WSS cuando usas HTTPS (ngrok).');
-      return () => {};
-    }
-
-    let ws;
-    try {
-      ws = new WebSocket(AR_WS_URL);
-    } catch (error) {
-      setStreamError('No se pudo conectar con el modulo AR.');
-      return () => {};
-    }
-    ws.binaryType = 'arraybuffer';
-    streamWsRef.current = ws;
-
-    ws.onopen = () => {
-      setStreamError('');
-    };
-
-    ws.onmessage = (event) => {
-      const blob = new Blob([event.data], { type: 'image/jpeg' });
-      const nextUrl = URL.createObjectURL(blob);
-      if (streamUrlRef.current) {
-        URL.revokeObjectURL(streamUrlRef.current);
-      }
-      streamUrlRef.current = nextUrl;
-      setStreamUrl(nextUrl);
-    };
-
-    ws.onerror = () => {
-      setStreamError('No se pudo conectar con el modulo AR.');
-    };
-
-    ws.onclose = () => {
-      if (!streamError) {
-        setStreamError('Conexion cerrada con el modulo AR.');
-      }
-    };
-
-    return () => {
-      ws.close();
-      if (streamUrlRef.current) {
-        URL.revokeObjectURL(streamUrlRef.current);
-        streamUrlRef.current = '';
-      }
-    };
-  }, []);
 
   const handleFileChange = (event) => {
     const file = event.target.files?.[0];
@@ -248,18 +193,6 @@ export default function VisionPage() {
       const haircutBase64 = data?.haircutImageBase64 || '';
       setGeneratedImage(haircutBase64);
       setRecommendations(Array.isArray(data?.recommendations) ? data.recommendations : []);
-
-      if (haircutBase64) {
-        sendOverlayToAr({
-          imageBase64: haircutBase64,
-          mimeType: 'image/png',
-          faceSummary: data?.faceSummary || null,
-          signal: controller.signal,
-        }).catch((arError) => {
-          if (isAbortError(arError)) return;
-          setStreamError('No se pudo enviar el corte al modulo AR.');
-        });
-      }
     } catch (requestError) {
       if (isAbortError(requestError)) return; // componente desmontado: no actualizar estado
       setError(requestError.message || 'Error al procesar la imagen.');
@@ -379,18 +312,6 @@ export default function VisionPage() {
               <span>Sin foto cargada</span>
             )}
           </div>
-        </div>
-
-        <div className="card vision-card">
-          <h3>Vista en tiempo real</h3>
-          <div className="vision-preview">
-            {streamUrl ? (
-              <img src={streamUrl} alt="Camara en vivo" />
-            ) : (
-              <span>Conectando camara...</span>
-            )}
-          </div>
-          {streamError && <p className="vision-error">{streamError}</p>}
         </div>
 
         <div className="card vision-card">

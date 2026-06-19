@@ -6,6 +6,7 @@ import morgan from 'morgan';
 import multer from 'multer';
 import swaggerUi from 'swagger-ui-express';
 import { dbConnection } from './db.js';
+import { seedDatabase } from './seeder.js';
 import { corsOptions } from './cors-configuration.js';
 import { helmetConfiguration } from './helmet-configuration.js';
 import { swaggerSpec } from './swagger.js';
@@ -22,10 +23,6 @@ import detailSaleRoutes from '../src/detailSale/detail.routes.js';
 import invoiceRoutes from '../src/invoice/invoice.routes.js';
 import statisticsRoutes from '../src/statistics/statistics.routes.js';
 import productRoutes from '../src/product/product.routes.js';
-
-// ── AI Haircut (integrado desde The5FadeFriends) ──────────────────────────────
-import aiHaircutRoutes from '../src/aiHaircut/aiHaircut.routes.js';
-import aiHaircutImageRoutes from '../src/aiHaircutImage/image.routes.js';
 
 const BASE_PATH = '/HaircutFiveFriends/api/v1';
 
@@ -61,9 +58,6 @@ const routes = (app) => {
     app.use(`${BASE_PATH}/statistics`,    statisticsRoutes);
     app.use(`${BASE_PATH}/products`,      productRoutes);
 
-    app.use(`${BASE_PATH}/ai-haircut`,    aiHaircutRoutes);
-    app.use(`${BASE_PATH}/ai-haircut-image`, aiHaircutImageRoutes);
-
     // ── Swagger ───────────────────────────────────────────────────────────────
     app.use(`${BASE_PATH}/api-docs`, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
@@ -78,18 +72,18 @@ const routes = (app) => {
 
 export const initServer = async () => {
     const app = express();
-    const PORT = process.env.PORT;
+    const PORT = process.env.PORT || 3006;
     app.set('trust proxy', 1);
 
     try {
         await dbConnection();
+        await seedDatabase();
         middlewares(app);
         routes(app);
 
         app.listen(PORT, () => {
             console.log(`HaircutFiveFriends server is running on port ${PORT}`);
             console.log(`Health check: http://localhost:${PORT}${BASE_PATH}/Health`);
-            console.log(`AI Haircut:   http://localhost:${PORT}${BASE_PATH}/ai-haircut/analyze`);
         });
 
     } catch (error) {
