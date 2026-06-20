@@ -3,11 +3,11 @@ import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../auth/store/authStore.js';
 import NavbarClient from '../components/NavbarClient.jsx';
-import defaultAvatarImg from '../../../assets/img/AvatarDefault.png';
 import { PasswordChangeModal } from '../components/PasswordChangeModal.jsx';
 import { ProfileAvatar } from '../components/ProfileAvatar.jsx';
 import { ProfileInfoForm } from '../components/ProfileInfoForm.jsx';
 import { ProfileQuickActions } from '../components/ProfileQuickActions.jsx';
+import defaultAvatarImg from '../../../assets/img/defaultAvatarImg.png';
 
 export const Perfil = () => {
   const { user, logout, updateUser } = useAuthStore();
