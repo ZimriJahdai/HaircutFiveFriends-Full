@@ -33,6 +33,10 @@ import { ReviewsClient } from '../../features/reviews/pages/ReviewsClient.jsx';
 import { InvoicesAdmin } from '../../features/invoice/pages/InvoicesAdmin.jsx';
 import { InvoicesClient } from '../../features/invoice/pages/InvoicesClient.jsx';
 
+import { AppointmentsAdmin } from '../../features/appointments/pages/AppointmentsAdmin.jsx';
+import { AppointmentsClient } from '../../features/appointments/pages/AppointmentsClient.jsx';
+import { ReservarCita } from '../../features/appointments/pages/ReservarCita.jsx';
+
 export const AppRoutes = () => {
   return (
     <Routes>
@@ -63,6 +67,7 @@ export const AppRoutes = () => {
         <Route path="productos" element={<ProductsAdmin />} />
         <Route path="facturas" element={<InvoicesAdmin />} />
         <Route path="resenas" element={<ReviewsAdmin />} />
+        <Route path="citas" element={<AppointmentsAdmin />} />
         <Route path="clientes" element={<Client />} />
         <Route path="perfil" element={<Perfil />} />
       </Route>
@@ -88,7 +93,8 @@ export const AppRoutes = () => {
         <Route path="resenas" element={<ReviewsClient />} />
         <Route path="favoritos" element={<Favoritos />} />
         <Route path="probar-corte" element={<ProbarCorte />} />
-        <Route path="reservar" element={<ProbarCorte />} />
+        <Route path="reservar" element={<ReservarCita />} />
+        <Route path="citas" element={<AppointmentsClient />} />
         <Route path="perfil" element={<Perfil />} />
       </Route>
     </Routes>

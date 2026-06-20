@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { FavoriteButton } from './FavoriteButton.jsx';
-import { StarDisplay } from '../../reviews/components/StarDisplay.jsx';
+import { StarDisplay } from '../../reviews/components/StarRating.jsx';
 
 const DAY_NAMES_SHORT = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 const DAY_NAMES_SPANISH = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
