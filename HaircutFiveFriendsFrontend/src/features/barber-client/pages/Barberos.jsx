@@ -1,13 +1,45 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import NavbarClient from '../../client/components/NavbarClient.jsx';
 import { BarberSearch } from '../components/BarberSearch.jsx';
 import { BarberosHeader } from '../components/BarberosHeader.jsx';
 import { BarberosEmptyState } from '../components/BarberosEmptyState.jsx';
 import { BarberSection } from '../components/BarberSection.jsx';
 import { useBarbers } from '../hooks/useBarbers.js';
+import { getAllReviews } from '../../../shared/api/review';
+
+const useReviewStats = (barbers) => {
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getAllReviews()
+      .then((res) => setReviews(res.data || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const statsMap = useMemo(() => {
+    const map = {};
+    for (const barber of barbers) {
+      const barberId = barber._id || barber.id;
+      const barberReviews = reviews.filter(
+        (r) => (r.barberoId?._id || r.barberoId) === barberId
+      );
+      const total = barberReviews.length;
+      const avg = total
+        ? (barberReviews.reduce((s, r) => s + r.score, 0) / total).toFixed(1)
+        : null;
+      map[barberId] = { total, average: avg };
+    }
+    return map;
+  }, [reviews, barbers]);
+
+  return { statsMap, loading };
+};
 
 export const Barberos = () => {
   const { barbers, loading, error, refetch } = useBarbers();
+  const { statsMap, loading: reviewsLoading } = useReviewStats(barbers);
   const [query, setQuery] = useState('');
 
   const filtered = useMemo(() => {
@@ -51,8 +83,8 @@ export const Barberos = () => {
           <BarberosEmptyState variant={variant} onAction={() => setQuery('')} query={query} />
         ) : (
           <>
-            <BarberSection title="Disponibles" icon="ti ti-circle-check" barbers={filtered.filter((b) => b.status)} active />
-            <BarberSection title="No disponibles" icon="ti ti-clock" barbers={filtered.filter((b) => !b.status)} active={false} />
+            <BarberSection title="Disponibles" icon="ti ti-circle-check" barbers={filtered.filter((b) => b.status)} active statsMap={statsMap} />
+            <BarberSection title="No disponibles" icon="ti ti-clock" barbers={filtered.filter((b) => !b.status)} active={false} statsMap={statsMap} />
           </>
         )}
       </main>

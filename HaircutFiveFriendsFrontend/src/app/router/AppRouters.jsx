@@ -4,6 +4,7 @@ import { AuthPage } from '../../features/auth/pages/AuthPage.jsx';
 import { VerifyEmailPage } from '../../features/auth/pages/VerifyEmailPage.jsx';
 import { ResetPasswordPage } from '../../features/auth/pages/ResetPasswordPage.jsx';
 import { UnauthorizedPage } from '../../features/auth/pages/UnauthorizedPage.jsx';
+import WelcomePage from '../pages/WelcomePage.jsx';
 
 import { ProtectedRoute } from './ProtectedRoute.jsx';
 import { RoleGuard } from './RoleGuard.jsx';
@@ -29,14 +30,20 @@ import { ServicesAdmin } from '../../features/services/pages/ServicesAdmin.jsx';
 import { ServicesClient } from '../../features/services/pages/ServicesClient.jsx';
 import { ReviewsAdmin } from '../../features/reviews/pages/ReviewsAdmin.jsx';
 import { ReviewsClient } from '../../features/reviews/pages/ReviewsClient.jsx';
+import { InvoicesAdmin } from '../../features/invoice/pages/InvoicesAdmin.jsx';
+import { InvoicesClient } from '../../features/invoice/pages/InvoicesClient.jsx';
 import { SalesAdmin } from '../../features/sales/pages/SalesAdmin.jsx';
 import { SalesClient } from '../../features/sales/pages/SalesClient.jsx';
+
+import { AppointmentsAdmin } from '../../features/appointments/pages/AppointmentsAdmin.jsx';
+import { AppointmentsClient } from '../../features/appointments/pages/AppointmentsClient.jsx';
+import { ReservarCita } from '../../features/appointments/pages/ReservarCita.jsx';
 
 export const AppRoutes = () => {
   return (
     <Routes>
       {/* Públicas */}
-      <Route path="/" element={<AuthPage />} />
+      <Route path="/" element={<WelcomePage />} />
       <Route path="/auth" element={<AuthPage />} />
       <Route path="/verify-email" element={<VerifyEmailPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
@@ -49,7 +56,7 @@ export const AppRoutes = () => {
         path="/dashboard"
         element={
           <ProtectedRoute>
-            <RoleGuard allowedRoles={['ADMIN_ROLE']}>
+            <RoleGuard allowedRoles={['ADMIN_ROLE', 'EMPLOYEE_ROLE']}>
               <DashboardLayout />
             </RoleGuard>
           </ProtectedRoute>
@@ -60,8 +67,10 @@ export const AppRoutes = () => {
         <Route path="barberos" element={<Barber />} />
         <Route path="servicios" element={<ServicesAdmin />} />
         <Route path="productos" element={<ProductsAdmin />} />
+        <Route path="facturas" element={<InvoicesAdmin />} />
         <Route path="resenas" element={<ReviewsAdmin />} />
         <Route path="ventas" element={<SalesAdmin />} />
+        <Route path="citas" element={<AppointmentsAdmin />} />
         <Route path="clientes" element={<Client />} />
         <Route path="perfil" element={<Perfil />} />
       </Route>
@@ -83,10 +92,13 @@ export const AppRoutes = () => {
         <Route path="barberos" element={<Barberos />} />
         <Route path="servicios" element={<ServicesClient />} />
         <Route path="productos" element={<ProductsClient />} />
+        <Route path="facturas" element={<InvoicesClient />} />
         <Route path="resenas" element={<ReviewsClient />} />
         <Route path="favoritos" element={<Favoritos />} />
         <Route path="compras" element={<SalesClient />} />
         <Route path="probar-corte" element={<ProbarCorte />} />
+        <Route path="reservar" element={<ReservarCita />} />
+        <Route path="citas" element={<AppointmentsClient />} />
         <Route path="perfil" element={<Perfil />} />
       </Route>
     </Routes>

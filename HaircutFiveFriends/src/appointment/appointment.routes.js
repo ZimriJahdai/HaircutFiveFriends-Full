@@ -7,16 +7,17 @@ import {
     getAppointmentsByDate,
     getAppointmentsByBarber,
     getAppointmentsByClient,
+    getMyAppointments,
     updateAppointment,
     cancelAppointment
 } from "./appointment.controller.js";
-import { 
-    validateCreateAppointment, 
+import {
+    validateCreateAppointment,
     validateUpdateAppointment,
     validateBarberAvailability,
     validateBarberAvailabilityUpdate
 } from "../../middlewares/appointment-validator.js";
-import { validateJWT, authorizeRoles, attachClientFromToken } from "../../middlewares/validate-JWT.js";
+import { validateJWT, authorizeRoles, attachClientFromToken, requireClientFromToken } from "../../middlewares/validate-JWT.js";
 
 const router = Router();
 const parseFormData = multer().none();
@@ -36,6 +37,14 @@ router.get(
     validateJWT,
     authorizeRoles('ADMIN_ROLE', 'EMPLOYEE_ROLE'),
     getAppointments
+);
+router.get(
+    "/mine",
+    validateJWT,
+    authorizeRoles('ADMIN_ROLE', 'USER_ROLE', 'EMPLOYEE_ROLE'),
+    attachClientFromToken,
+    requireClientFromToken,
+    getMyAppointments
 );
 router.get(
     "/date/:date",

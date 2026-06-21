@@ -6,6 +6,13 @@ import {
   deleteClient as deleteClientRequest,
 } from "../../../shared/api/client";
 
+function formatServerError(data) {
+  if (data?.errors?.length > 0) {
+    return data.errors.map((e) => `• ${e.msg}`).join('\n');
+  }
+  return data?.message || null;
+}
+
 export const useClientStore = create((set, get) => ({
   clients: [],
   loading: false,
@@ -21,7 +28,7 @@ export const useClientStore = create((set, get) => ({
       });
     } catch (error) {
       set({
-        error: error.response?.data?.message || "Error al obtener los clientes",
+        error: formatServerError(error.response?.data) || "Error al obtener los clientes",
         loading: false,
       });
     }
@@ -35,7 +42,7 @@ export const useClientStore = create((set, get) => ({
       set({ loading: false });
     } catch (error) {
       set({
-        error: error.response?.data?.message || "Error al crear el cliente",
+        error: formatServerError(error.response?.data) || "Error al crear el cliente",
         loading: false,
       });
       throw error;
@@ -50,7 +57,7 @@ export const useClientStore = create((set, get) => ({
       set({ loading: false });
     } catch (error) {
       set({
-        error: error.response?.data?.message || "Error al actualizar el cliente",
+        error: formatServerError(error.response?.data) || "Error al actualizar el cliente",
         loading: false,
       });
       throw error;
@@ -65,7 +72,7 @@ export const useClientStore = create((set, get) => ({
       set({ loading: false });
     } catch (error) {
       set({
-        error: error.response?.data?.message || "Error al eliminar el cliente",
+        error: formatServerError(error.response?.data) || "Error al eliminar el cliente",
         loading: false,
       });
       throw error;

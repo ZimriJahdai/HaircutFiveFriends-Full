@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useAuthStore } from "../../../features/auth/store/authStore";
-import defaultAvatarImg from "../../../assets/img/AvatarDefault.png";
+import { useAuthStore } from '../../../features/auth/store/authStore.js';
 
+const DEFAULT_AVATAR_IMG = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIj48Y2lyY2xlIGN4PSI2MCIgY3k9IjYwIiByPSI2MCIgZmlsbD0iI2U0ZTRlNCIvPjx0ZXh0IHg9IjYwIiB5PSI2NSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSIyMCIgZmlsbD0iIzY2NjY2NiI+VXNlcjwvdGV4dD48L3N2Zz4=';
+const DEFAULT_MENU_ITEMS = [];
 
 export const AvatarUser = ({ dark = false, menuItems }) => {
     const { user, logout } = useAuthStore();
@@ -31,7 +32,7 @@ export const AvatarUser = ({ dark = false, menuItems }) => {
 
     const avatarSrc =
         (user?.profilePicture && user.profilePicture.trim() !== "") ? user.profilePicture :
-        (user?.ProfilePicture && user.ProfilePicture.trim() !== "") ? user.ProfilePicture : defaultAvatarImg;
+        (user?.ProfilePicture && user.ProfilePicture.trim() !== "") ? user.ProfilePicture : DEFAULT_AVATAR_IMG;
 
     const items = menuItems || DEFAULT_MENU_ITEMS;
 
@@ -48,7 +49,7 @@ export const AvatarUser = ({ dark = false, menuItems }) => {
                 onClick={toogleMenu}
                 onError={(e) => {
                     e.target.onerror = null;
-                    e.target.src = defaultAvatarImg;
+                    e.target.src = DEFAULT_AVATAR_IMG;
                 }}
             />
 

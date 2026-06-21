@@ -4,6 +4,13 @@ import { useSaveBarber } from '../hooks/useSaveBarber';
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'image/avif'];
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 
+const DAYS_OF_WEEK = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+
+const DEFAULT_SCHEDULE = DAYS_OF_WEEK.reduce((acc, day) => {
+  acc[day] = { active: false, start: '09:00', end: '17:00' };
+  return acc;
+}, {});
+
 const EMPTY_FORM = {
   name: '',
   email: '',
@@ -11,7 +18,22 @@ const EMPTY_FORM = {
   phone: '',
   status: true,
   profilePicture: null,
+  schedule: { ...DEFAULT_SCHEDULE },
 };
+
+function parseScheduleFromBarber(barber) {
+  if (!barber.schedule || !Array.isArray(barber.schedule)) return { ...DEFAULT_SCHEDULE };
+  const schedule = { ...DEFAULT_SCHEDULE };
+  barber.schedule.forEach(({ days, hours }) => {
+    if (days && schedule[days]) {
+      schedule[days].active = true;
+      const [start, end] = hours.split(' - ').map(s => s.trim());
+      if (start) schedule[days].start = start;
+      if (end) schedule[days].end = end;
+    }
+  });
+  return schedule;
+}
 
 export const BarberModal = ({ editing, onClose, onSuccess }) => {
   const [form, setForm] = useState(EMPTY_FORM);
@@ -29,6 +51,7 @@ export const BarberModal = ({ editing, onClose, onSuccess }) => {
         phone: editing.phone || '',
         status: editing.status ?? true,
         profilePicture: null,
+        schedule: parseScheduleFromBarber(editing),
       });
     } else {
       setForm(EMPTY_FORM);
@@ -62,18 +85,39 @@ export const BarberModal = ({ editing, onClose, onSuccess }) => {
     setForm({ ...form, [name]: value });
   };
 
+  const handleScheduleChange = (day, field, value) => {
+    setForm({
+      ...form,
+      schedule: {
+        ...form.schedule,
+        [day]: { ...form.schedule[day], [field]: value },
+      },
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitting(true);
     setLocalError('');
 
+    const invalidDays = Object.entries(form.schedule)
+      .filter(([, s]) => s.active && s.start >= s.end)
+      .map(([day]) => day);
+    if (invalidDays.length > 0) {
+      setLocalError(`La hora de entrada debe ser antes de la salida en: ${invalidDays.join(', ')}`);
+      return;
+    }
+
+    setSubmitting(true);
     try {
       await saveBarber(form, editing ? editing._id : null);
       onSuccess(editing ? 'Barbero actualizado exitosamente' : 'Barbero creado exitosamente');
     } catch (err) {
-      setLocalError(
-        err.response?.data?.message || err.message || 'Error al guardar el barbero'
-      );
+      const data = err.response?.data;
+      if (data?.errors?.length > 0) {
+        setLocalError(data.errors.map((e) => `• ${e.msg}`).join('\n'));
+      } else {
+        setLocalError(data?.message || err.message || 'Error al guardar el barbero');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -178,6 +222,53 @@ export const BarberModal = ({ editing, onClose, onSuccess }) => {
                 className="bg-[#111] border border-[#2A2A2A] focus:border-[#C9A84C] rounded-md px-2.5 py-1.5 text-[13px] text-[#E8E4DC] outline-none transition-colors file:mr-3 file:py-1 file:px-3 file:rounded file:border-0 file:text-[12px] file:bg-[#2A2A2A] file:text-[#E8E4DC] hover:file:bg-[#333]"
                 onChange={handleChange}
               />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[12px] text-[#5A5A5A] font-medium">Horario semanal</span>
+              <div className="border border-[#2A2A2A] rounded-lg overflow-hidden divide-y divide-[#2A2A2A]">
+                {DAYS_OF_WEEK.map((day) => {
+                  const s = form.schedule[day];
+                  const hasError = s.active && s.start >= s.end;
+                  return (
+                    <div key={day} className={`flex flex-col px-3 py-2 bg-[#111] transition-colors ${hasError ? 'bg-[#1A1010]' : 'hover:bg-[#161616]'}`}>
+                      <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={s.active}
+                          onChange={(e) => handleScheduleChange(day, 'active', e.target.checked)}
+                          className="h-4 w-4 rounded border-[#2A2A2A] bg-[#111] text-[#C9A84C] focus:ring-[#C9A84C] shrink-0"
+                        />
+                        <span className="text-[13px] text-[#E8E4DC] min-w-[68px] font-medium">{day}</span>
+                        {s.active ? (
+                          <div className="flex items-center gap-1.5 ml-auto">
+                            <input
+                              type="time"
+                              value={s.start}
+                              onChange={(e) => handleScheduleChange(day, 'start', e.target.value)}
+                              className={`bg-[#0D0D0D] border rounded-md px-2 py-1 text-[12px] text-[#E8E4DC] outline-none w-[95px] cursor-default ${hasError ? 'border-[#C94C4C]' : 'border-[#2A2A2A]'}`}
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                            <span className="text-[#5A5A5A] text-[12px]">a</span>
+                            <input
+                              type="time"
+                              value={s.end}
+                              onChange={(e) => handleScheduleChange(day, 'end', e.target.value)}
+                              className={`bg-[#0D0D0D] border rounded-md px-2 py-1 text-[12px] text-[#E8E4DC] outline-none w-[95px] cursor-default ${hasError ? 'border-[#C94C4C]' : 'border-[#2A2A2A]'}`}
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          </div>
+                        ) : (
+                          <span className="ml-auto text-[11px] text-[#5A5A5A]">Descanso</span>
+                        )}
+                      </label>
+                      {hasError && (
+                        <span className="text-[11px] text-[#C94C4C] mt-1 ml-9">Entrada debe ser antes de salida</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
             {editing && editing.profilePicture && (

@@ -7,6 +7,7 @@ const NAV_CONFIG = {
     { label: 'Inicio',             icon: 'ti-home',       to: '/dashboard' },
     { label: 'Cortes de cabello',  icon: 'ti-scissors',   to: '/dashboard/haircut' },
     { label: 'Productos',          icon: 'ti-package',    to: '/dashboard/productos' },
+    { label: 'Facturas',           icon: 'ti-file-text',  to: '/dashboard/facturas' },
     { label: 'Citas',              icon: 'ti-calendar',   to: '/dashboard/citas' },
     { label: 'Ventas',             icon: 'ti-receipt',    to: '/dashboard/ventas' },
     { label: 'Clientes',           icon: 'ti-users',      to: '/dashboard/clientes' },
@@ -17,10 +18,22 @@ const NAV_CONFIG = {
     { label: 'Reseñas',            icon: 'ti-star',       to: '/dashboard/resenas' },
     { type: 'section', label: 'Cuenta' },
   ],
+  EMPLOYEE_ROLE: [
+    { label: 'Inicio',             icon: 'ti-home',       to: '/dashboard' },
+    { label: 'Cortes de cabello',  icon: 'ti-scissors',   to: '/dashboard/haircut' },
+    { label: 'Productos',          icon: 'ti-package',    to: '/dashboard/productos' },
+    { label: 'Citas',              icon: 'ti-calendar',   to: '/dashboard/citas' },
+    { label: 'Clientes',           icon: 'ti-users',      to: '/dashboard/clientes' },
+    { type: 'section', label: 'Servicios' },
+    { label: 'Servicios',          icon: 'ti-scissors',   to: '/dashboard/servicios' },
+    { label: 'Reseñas',            icon: 'ti-star',       to: '/dashboard/resenas' },
+    { type: 'section', label: 'Cuenta' },
+  ],
   USER_ROLE: [
     { label: 'Inicio',             icon: 'ti-home',           to: '/client' },
     { label: 'Reservar cita',      icon: 'ti-calendar-plus',  to: '/client/reservar', badge: 'Nuevo' },
     { label: 'Productos',          icon: 'ti-package',        to: '/client/productos' },
+    { label: 'Facturas',           icon: 'ti-file-text',      to: '/client/facturas' },
     { label: 'Mis compras',        icon: 'ti-shopping-cart',  to: '/client/compras' },
     { label: 'Mis citas',          icon: 'ti-calendar',       to: '/client/citas' },
     { type: 'section', label: 'Cuenta' },
@@ -82,7 +95,7 @@ const s = {
     fontWeight: 500, padding: '1px 6px', borderRadius: '10px', flexShrink: 0,
   }),
   foot: { borderTop: '1px solid #1E1E1E', padding: '10px 8px' },
-  logoutBtn: (hovered, collapsed) => ({
+  logoutBtn: (hovered) => ({
     display: 'flex', alignItems: 'center', gap: '10px',
     padding: '9px 10px', borderRadius: '6px', cursor: 'pointer',
     border: 'none', width: '100%', whiteSpace: 'nowrap', overflow: 'hidden',
@@ -154,7 +167,7 @@ export default function Sidebar({ collapsed }) {
       {/* Footer: solo botón de cerrar sesión */}
       <div style={s.foot}>
         <button
-          style={s.logoutBtn(logoutHovered, collapsed)}
+          style={s.logoutBtn(logoutHovered)}
           onMouseEnter={() => setLogoutHovered(true)}
           onMouseLeave={() => setLogoutHovered(false)}
           onClick={handleLogout}

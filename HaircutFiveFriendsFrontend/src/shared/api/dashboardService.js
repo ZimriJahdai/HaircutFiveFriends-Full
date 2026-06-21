@@ -52,6 +52,15 @@ export const fetchSales = async (token) => {
   return json; // { sales: [...] }
 };
 
+export const fetchMySales = async (token) => {
+  const res = await fetch(`${API_URL}/sales/my-sales`, {
+    headers: authHeader(token),
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.message);
+  return json; // { sales: [...] }
+};
+
 // ── USER ─────────────────────────────────────────────────────────────────────
 
 export const fetchAppointmentsByClient = async (token, clientId) => {

@@ -1,7 +1,45 @@
 import { Link } from 'react-router-dom';
 import { FavoriteButton } from './FavoriteButton.jsx';
+import { StarDisplay } from '../../reviews/components/StarRating.jsx';
 
-export const FavoriteCard = ({ favorite }) => {
+const DAY_NAMES_SHORT = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+const DAY_NAMES_SPANISH = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+
+const SCHEDULE_DAYS = [1, 2, 3, 4, 5];
+
+const BarberSchedule = ({ referenceId }) => {
+  const scheduleMap = {};
+  if (referenceId.schedule) {
+    referenceId.schedule.forEach((s) => {
+      scheduleMap[s.days] = s.hours;
+    });
+  }
+
+  const parseHours = (hours) => {
+    if (!hours) return null;
+    const parts = hours.split(' - ');
+    return parts.length === 2 ? `${parts[0]}-${parts[1]}` : hours;
+  };
+
+  return (
+    <div className="grid grid-cols-5 gap-1">
+      {SCHEDULE_DAYS.map((dayNum) => {
+        const dayName = DAY_NAMES_SPANISH[dayNum];
+        const hours = scheduleMap[dayName];
+        return (
+          <div key={dayNum} className="text-center">
+            <div className="text-[9px] text-[#444] uppercase">{DAY_NAMES_SHORT[dayNum]}</div>
+            <div className={`text-[10px] ${hours ? 'text-[#00D2C4]' : 'text-[#2A2A2A]'}`}>
+              {hours ? parseHours(hours) : '—'}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+export const FavoriteCard = ({ favorite, reviewStatsMap }) => {
   const { typeFavorite, referenceId } = favorite;
 
   if (!referenceId) {
@@ -20,28 +58,15 @@ export const FavoriteCard = ({ favorite }) => {
   let detailsText = '';
   let footerAction = null;
 
+  const barberId = referenceId._id || referenceId.id;
+  const reviewStats = reviewStatsMap?.[barberId];
+
   switch (typeFavorite) {
     case 'BARBER':
       imageSrc = referenceId.profilePicture;
       fallbackIcon = 'ti-user';
       badgeText = referenceId.status ? 'Barbero Disponible' : 'No Disponible';
       detailsText = referenceId.email || '';
-      footerAction = (
-        <Link
-          to="/client/reservar"
-          state={{ barberId: referenceId._id, barberName: referenceId.name }}
-          aria-disabled={!referenceId.status}
-          className={[
-            'flex items-center justify-center gap-1.5 w-full py-2 rounded-lg text-[12px] font-semibold transition-all duration-200 focus:outline-none',
-            referenceId.status
-              ? 'bg-[#00D2C4]/10 hover:bg-[#00D2C4] text-[#00D2C4] hover:text-[#0A0A0A] border border-[#00D2C4]/30 hover:border-[#00D2C4]'
-              : 'bg-[#1A1A1A] text-[#5A5A5A] border border-[#2A2A2A] cursor-not-allowed pointer-events-none',
-          ].join(' ')}
-        >
-          <i className="ti ti-calendar-event text-[13px]" aria-hidden="true" />
-          {referenceId.status ? 'Reservar cita' : 'No disponible'}
-        </Link>
-      );
       break;
 
     case 'PRODUCT':
@@ -127,18 +152,77 @@ export const FavoriteCard = ({ favorite }) => {
       </div>
 
       {/* Content Area */}
-      <div className="p-4 flex flex-col h-[180px] justify-between">
-        <div>
-          <h3 className="font-['Bebas_Neue',sans-serif] text-xl tracking-[1.5px] text-[#E8E4DC] leading-tight mb-1 truncate">
+      {typeFavorite === 'BARBER' ? (
+        <div className="p-4">
+          <h3 className="font-['Bebas_Neue',sans-serif] text-xl tracking-[1.5px] text-[#E8E4DC] leading-tight mb-0.5 truncate">
             {title}
           </h3>
-          <p className="text-[12px] text-[#888] line-clamp-3 mb-2">{detailsText}</p>
-        </div>
 
-        <div>
-          {footerAction}
+          {reviewStats && reviewStats.total > 0 ? (
+            <div className="flex items-center gap-2 mb-3">
+              <StarDisplay value={parseFloat(reviewStats.average)} />
+              <span className="text-[11px] text-[#5A5A5A]">
+                {reviewStats.average} ({reviewStats.total} {reviewStats.total === 1 ? 'reseña' : 'reseñas'})
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-[11px] text-[#444]">☆☆☆☆☆</span>
+              <span className="text-[11px] text-[#444]">Sin reseñas</span>
+            </div>
+          )}
+
+          <p className="text-[12px] text-[#5A5A5A] mb-3">{referenceId.email}</p>
+
+          <div className="space-y-2.5">
+            {referenceId.phone && (
+              <div className="flex items-center gap-2 text-[12px] text-[#5A5A5A]">
+                <i className="ti ti-phone text-[#00D2C4] text-[14px]" aria-hidden="true" />
+                <span>{referenceId.phone}</span>
+              </div>
+            )}
+
+            {referenceId.schedule && referenceId.schedule.length > 0 && (
+              <div className="pt-2 mt-2 border-t border-[#1E1E1E]">
+                <div className="flex items-center gap-2 text-[11px] text-[#5A5A5A] mb-1.5">
+                  <i className="ti ti-clock text-[#00D2C4] text-[12px]" aria-hidden="true" />
+                  <span className="text-[10px] uppercase tracking-[1px] font-semibold">Horario</span>
+                </div>
+                <BarberSchedule referenceId={referenceId} />
+              </div>
+            )}
+          </div>
+
+          <div className="mt-3">
+            <Link
+              to="/client/reservar"
+              state={{ barberId: referenceId._id, barberName: referenceId.name }}
+              aria-disabled={!referenceId.status}
+              className={[
+                'flex items-center justify-center gap-1.5 w-full py-2 rounded-lg text-[12px] font-semibold transition-all duration-200 focus:outline-none',
+                referenceId.status
+                  ? 'bg-[#00D2C4]/10 hover:bg-[#00D2C4] text-[#00D2C4] hover:text-[#0A0A0A] border border-[#00D2C4]/30 hover:border-[#00D2C4]'
+                  : 'bg-[#1A1A1A] text-[#5A5A5A] border border-[#2A2A2A] cursor-not-allowed pointer-events-none',
+              ].join(' ')}
+            >
+              <i className="ti ti-calendar-event text-[13px]" aria-hidden="true" />
+              {referenceId.status ? 'Reservar cita' : 'No disponible'}
+            </Link>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="p-4 flex flex-col h-[180px] justify-between">
+          <div>
+            <h3 className="font-['Bebas_Neue',sans-serif] text-xl tracking-[1.5px] text-[#E8E4DC] leading-tight mb-1 truncate">
+              {title}
+            </h3>
+            <p className="text-[12px] text-[#888] line-clamp-3 mb-2">{detailsText}</p>
+          </div>
+          <div>
+            {footerAction}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import FondoImage from '../../../assets/img/Fondo.png';
 import { LoginForm } from '../components/LoginForm.jsx';
 import { RegisterForm } from '../components/RegisterForm.jsx';
 import { ForgotPasswordForm } from '../components/ForgotPasswordForm.jsx';
@@ -28,8 +29,15 @@ export const AuthPage = () => {
   const isSecondary = activeTab === 'forgot' || activeTab === 'resend';
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-8 bg-[#0A0A0A] font-sans">
-      <div className="w-full max-w-[560px] bg-[#111111] border border-[#C9A84C]/20 rounded-2xl overflow-hidden shadow-[0_14px_60px_rgba(0,0,0,0.6)]">
+    <div
+      className="min-h-screen flex items-center justify-center p-8 font-sans"
+      style={{
+        backgroundImage: `url(${FondoImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      <div className="w-full max-w-[560px] bg-[#111111]/95 border border-[#C9A84C]/20 rounded-2xl overflow-hidden shadow-[0_14px_60px_rgba(0,0,0,0.6)] backdrop-blur-sm">
 
         {/* Header */}
         <div className="px-8 py-6 border-b border-[#C9A84C]/20 text-center">
