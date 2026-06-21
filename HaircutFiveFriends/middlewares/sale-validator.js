@@ -10,6 +10,104 @@ export const validateSaleRequest = async (req, res, next) => {
     try {
         const { detailId, detailIds, itemsWithPoints, clientId } = req.body
 
+        // Parsear itemsWithPoints (puede venir como string o como objeto)
+        let itemsWithPointsParsed = {}
+        if (itemsWithPoints) {
+            if (typeof itemsWithPoints === 'string') {
+                try {
+                    itemsWithPointsParsed = JSON.parse(itemsWithPoints)
+                } catch {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'itemsWithPoints debe ser un objeto JSON válido'
+                    })
+                }
+            } else if (typeof itemsWithPoints === 'object') {
+                itemsWithPointsParsed = itemsWithPoints
+            }
+        }
+
+        // ── CASO B: el front envía "details" (objetos a crear) en vez de IDs existentes ──
+        let inlineDetails = req.body.details
+        if (typeof inlineDetails === 'string') {
+            try { inlineDetails = JSON.parse(inlineDetails) } catch { inlineDetails = null }
+        }
+
+        if (Array.isArray(inlineDetails) && inlineDetails.length > 0) {
+            let hasMoney = false
+            let hasPoints = false
+            let totalPointsNeeded = 0
+
+            for (const item of inlineDetails) {
+                const refId = item.referenceId
+                const quantity = Number(item.quantity)
+
+                if (!refId || !mongoose.Types.ObjectId.isValid(refId)) {
+                    return res.status(400).json({ success: false, message: `Referencia inválida: ${refId}` })
+                }
+                if (!quantity || quantity <= 0 || !Number.isInteger(quantity)) {
+                    return res.status(400).json({ success: false, message: 'La cantidad debe ser un entero mayor a 0' })
+                }
+
+                const usePoints = itemsWithPointsParsed[refId] === true
+
+                if (item.detailType === 'PRODUCT') {
+                    const product = await Product.findById(refId).select('name price pointsPrice stock')
+                    if (!product) {
+                        return res.status(404).json({ success: false, message: `Producto ${refId} no encontrado` })
+                    }
+                    if (product.stock < quantity) {
+                        return res.status(400).json({
+                            success: false,
+                            message: `Stock insuficiente para "${product.name}". Disponible: ${product.stock}, Solicitado: ${quantity}`
+                        })
+                    }
+                    if (usePoints) {
+                        if (!product.pointsPrice || product.pointsPrice <= 0) {
+                            return res.status(400).json({ success: false, message: `El producto "${product.name}" no tiene precio en puntos` })
+                        }
+                        totalPointsNeeded += product.pointsPrice * quantity
+                        hasPoints = true
+                    } else {
+                        hasMoney = true
+                    }
+                } else if (item.detailType === 'SERVICE') {
+                    const service = await Service.findById(refId).select('name price pointsPrice')
+                    if (!service) {
+                        return res.status(404).json({ success: false, message: `Servicio ${refId} no encontrado` })
+                    }
+                    if (usePoints) {
+                        if (!service.pointsPrice || service.pointsPrice <= 0) {
+                            return res.status(400).json({ success: false, message: `El servicio "${service.name}" no tiene precio en puntos` })
+                        }
+                        totalPointsNeeded += service.pointsPrice * quantity
+                        hasPoints = true
+                    } else {
+                        hasMoney = true
+                    }
+                } else {
+                    return res.status(400).json({ success: false, message: 'Tipo de detalle inválido (usa PRODUCT o SERVICE)' })
+                }
+            }
+
+            if (!hasMoney && !hasPoints) {
+                return res.status(400).json({ success: false, message: 'La venta debe tener al menos un ítem pagado con dinero o puntos' })
+            }
+
+            if (hasPoints && clientId && mongoose.Types.ObjectId.isValid(clientId)) {
+                const client = await Client.findById(clientId).select('points')
+                if (client && totalPointsNeeded > client.points) {
+                    return res.status(400).json({
+                        success: false,
+                        message: `Puntos insuficientes. Necesitas ${totalPointsNeeded} puntos pero solo tienes ${client.points}`
+                    })
+                }
+            }
+
+            return next()
+        }
+
+        // ── CASO A: detailId / detailIds con IDs de detalles ya existentes ──
         // Normalizar detailIds
         let normalizedDetailIds = detailId || detailIds || []
         if (typeof normalizedDetailIds === 'string') {

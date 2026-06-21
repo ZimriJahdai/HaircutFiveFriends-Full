@@ -102,7 +102,17 @@ export const getFullImageUrl = (imagePath) => {
 
 export const getDefaultAvatarUrl = () => {
   const defaultPath = config.cloudinary.defaultAvatarPath;
-  return getFullImageUrl(defaultPath);
+  if (!defaultPath) {
+    return 'https://placehold.co/150x150/1a1a2e/facc15?text=User';
+  }
+  if (defaultPath.startsWith('http')) {
+    return defaultPath;
+  }
+  const baseUrl = config.cloudinary.baseUrl;
+  if (!baseUrl) {
+    return 'https://placehold.co/150x150/1a1a2e/facc15?text=User';
+  }
+  return `${baseUrl}${defaultPath}`;
 };
 
 export const getDefaultAvatarPath = () => {

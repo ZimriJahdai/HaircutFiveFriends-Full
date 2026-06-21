@@ -72,6 +72,11 @@ export default function NavbarClient() {
             Estilos
           </NavLink>
 
+          <NavLink to="/client/compras" className={navLinkClass}>
+            <i className="ti ti-shopping-cart text-base" />
+            Mis compras
+          </NavLink>
+
           <NavLink to="/client/favoritos" className={navLinkClass}>
             <i className="ti ti-heart text-base" />
             Favoritos

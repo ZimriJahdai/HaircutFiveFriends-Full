@@ -44,6 +44,20 @@ export const getClients = async (req, res) => {
     }
 }
 
+// Devuelve el cliente de Mongo vinculado al usuario autenticado (por userId del token)
+export const getMyClient = async (req, res) => {
+    try {
+        const client = await Client.findOne({ userId: req.userId })
+            .select('name email phone points faceshape profilePicture');
+        if (!client) {
+            return res.status(404).json({ success: false, message: 'Cliente no encontrado para el usuario autenticado' });
+        }
+        return res.status(200).json({ success: true, data: client });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+}
+
 export const getClientById = async (req, res) => {
     try {
         const { id } = req.params;
