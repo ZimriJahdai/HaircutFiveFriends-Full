@@ -5,8 +5,7 @@ import { authService } from '../../../shared/api/auth.js';
 const ALLOWED_ROLES = [
   'ADMIN_ROLE',
   'USER_ROLE',
-  'ADMIN_RESTAURANTE',
-  'ADMIN_RESTAURANT',
+  'EMPLOYEE_ROLE',
 ];
 
 const initialState = {

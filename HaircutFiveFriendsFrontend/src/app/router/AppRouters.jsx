@@ -35,6 +35,10 @@ import { InvoicesClient } from '../../features/invoice/pages/InvoicesClient.jsx'
 import { SalesAdmin } from '../../features/sales/pages/SalesAdmin.jsx';
 import { SalesClient } from '../../features/sales/pages/SalesClient.jsx';
 
+import { AppointmentsAdmin } from '../../features/appointments/pages/AppointmentsAdmin.jsx';
+import { AppointmentsClient } from '../../features/appointments/pages/AppointmentsClient.jsx';
+import { ReservarCita } from '../../features/appointments/pages/ReservarCita.jsx';
+
 export const AppRoutes = () => {
   return (
     <Routes>
@@ -52,7 +56,7 @@ export const AppRoutes = () => {
         path="/dashboard"
         element={
           <ProtectedRoute>
-            <RoleGuard allowedRoles={['ADMIN_ROLE']}>
+            <RoleGuard allowedRoles={['ADMIN_ROLE', 'EMPLOYEE_ROLE']}>
               <DashboardLayout />
             </RoleGuard>
           </ProtectedRoute>
@@ -66,6 +70,7 @@ export const AppRoutes = () => {
         <Route path="facturas" element={<InvoicesAdmin />} />
         <Route path="resenas" element={<ReviewsAdmin />} />
         <Route path="ventas" element={<SalesAdmin />} />
+        <Route path="citas" element={<AppointmentsAdmin />} />
         <Route path="clientes" element={<Client />} />
         <Route path="perfil" element={<Perfil />} />
       </Route>
@@ -92,7 +97,8 @@ export const AppRoutes = () => {
         <Route path="favoritos" element={<Favoritos />} />
         <Route path="compras" element={<SalesClient />} />
         <Route path="probar-corte" element={<ProbarCorte />} />
-        <Route path="reservar" element={<ProbarCorte />} />
+        <Route path="reservar" element={<ReservarCita />} />
+        <Route path="citas" element={<AppointmentsClient />} />
         <Route path="perfil" element={<Perfil />} />
       </Route>
     </Routes>

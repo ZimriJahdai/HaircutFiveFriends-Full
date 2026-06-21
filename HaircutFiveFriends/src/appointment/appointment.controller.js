@@ -155,6 +155,37 @@ export const getAppointmentsByBarber = async (req, res) => {
     }
 };
 
+export const getMyAppointments = async (req, res) => {
+    try {
+        const client = req.clientFromToken;
+        if (!client) {
+            return res.status(404).json({
+                success: false,
+                message: 'Cliente no encontrado para el usuario autenticado'
+            });
+        }
+
+        const appointments = await Appointment.find({ clienteId: client._id })
+            .populate('clienteId', 'name email phone')
+            .populate('barberId', 'name phone')
+            .populate('serviceId', 'name price duration')
+            .sort({ appointmentDate: -1 });
+
+        res.status(200).json({
+            success: true,
+            message: 'Citas del cliente obtenidas exitosamente',
+            total: appointments.length,
+            data: appointments
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener tus citas',
+            error: error.message
+        });
+    }
+};
+
 export const getAppointmentsByClient = async (req, res) => {
     try {
         const { clientId } = req.params;

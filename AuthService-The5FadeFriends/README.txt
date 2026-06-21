@@ -3,10 +3,10 @@ PORT=3005
  
 # Database PostgreSQL
 DB_HOST=localhost
-DB_PORT=5432
+DB_PORT=5433
 DB_NAME=HaircutFiveFriends
-DB_USERNAME=postgres
-DB_PASSWORD=root
+DB_USERNAME=root
+DB_PASSWORD=admin
 DB_SQL_LOGGING=false
  
 # JWT Configuration

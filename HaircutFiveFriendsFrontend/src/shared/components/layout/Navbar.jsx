@@ -65,7 +65,7 @@ export default function Navbar({ onToggleSidebar, hasNotifications = true }) {
 
   const roleShort =
     role === 'ADMIN_ROLE' ? 'Administrador' :
-    role === 'ADMIN_RESTAURANTE' || role === 'ADMIN_RESTAURANT' ? 'Admin Rest.' :
+    role === 'EMPLOYEE_ROLE' ? 'Barbero' :
     'Cliente';
 
   useEffect(() => {

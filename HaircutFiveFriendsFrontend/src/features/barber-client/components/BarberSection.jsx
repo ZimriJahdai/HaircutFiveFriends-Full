@@ -4,7 +4,7 @@ import { BarberClientCard } from './BarberClientCard.jsx';
  * BarberSection — sección de barberos con título, icono, badge y grid.
  * Reutilizable para "Disponibles" e "No disponibles".
  */
-export const BarberSection = ({ title, icon, barbers, active }) => {
+export const BarberSection = ({ title, icon, barbers, active, statsMap = {} }) => {
   if (!barbers.length) return null;
 
   return (
@@ -28,7 +28,7 @@ export const BarberSection = ({ title, icon, barbers, active }) => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
         {barbers.map((barber) => (
-          <BarberClientCard key={barber._id} barber={barber} />
+          <BarberClientCard key={barber._id} barber={barber} reviewStats={statsMap[barber._id || barber.id]} />
         ))}
       </div>
     </section>
