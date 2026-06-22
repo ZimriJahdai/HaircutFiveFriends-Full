@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuthStore } from '../../auth/store/authStore.js';
 import { fetchMySales } from '../../../shared/api/dashboardService.js';
 import { downloadInvoicePdf } from '../../../shared/api/invoiceService.js';
+import NavbarClient from '../../client/components/NavbarClient.jsx';
 
 export const InvoicesClient = () => {
   const token = useAuthStore((state) => state.token);
@@ -52,6 +53,7 @@ export const InvoicesClient = () => {
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-white flex flex-col font-sans">
+      <NavbarClient />
       <div className="max-w-[1200px] w-full mx-auto px-6 py-10">
         <div className="mb-8">
           <h1 className="font-['Bebas_Neue',sans-serif] text-5xl sm:text-6xl tracking-[3px] text-[#E8E4DC] leading-none mb-2">

@@ -35,6 +35,7 @@ const NAV_CONFIG = {
     { label: 'Productos',          icon: 'ti-package',        to: '/client/productos' },
     { label: 'Facturas',           icon: 'ti-file-text',      to: '/client/facturas' },
     { label: 'Mis compras',        icon: 'ti-shopping-cart',  to: '/client/compras' },
+    { label: 'Reportes',           icon: 'ti-chart-bar',      to: '/client/reportes' },
     { label: 'Mis citas',          icon: 'ti-calendar',       to: '/client/citas' },
     { type: 'section', label: 'Cuenta' },
     { label: 'Mi perfil',          icon: 'ti-user-circle',    to: '/client/perfil' },

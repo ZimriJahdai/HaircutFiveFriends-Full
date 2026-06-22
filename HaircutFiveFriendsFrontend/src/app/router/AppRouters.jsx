@@ -34,6 +34,8 @@ import { InvoicesAdmin } from '../../features/invoice/pages/InvoicesAdmin.jsx';
 import { InvoicesClient } from '../../features/invoice/pages/InvoicesClient.jsx';
 import { SalesAdmin } from '../../features/sales/pages/SalesAdmin.jsx';
 import { SalesClient } from '../../features/sales/pages/SalesClient.jsx';
+import { ReportsAdmin } from '../../features/statistics/pages/ReportsAdmin.jsx';
+import { ReportsClient } from '../../features/statistics/pages/ReportsClient.jsx';
 
 import { AppointmentsAdmin } from '../../features/appointments/pages/AppointmentsAdmin.jsx';
 import { AppointmentsClient } from '../../features/appointments/pages/AppointmentsClient.jsx';
@@ -70,6 +72,7 @@ export const AppRoutes = () => {
         <Route path="facturas" element={<InvoicesAdmin />} />
         <Route path="resenas" element={<ReviewsAdmin />} />
         <Route path="ventas" element={<SalesAdmin />} />
+        <Route path="reportes" element={<ReportsAdmin />} />
         <Route path="citas" element={<AppointmentsAdmin />} />
         <Route path="clientes" element={<Client />} />
         <Route path="perfil" element={<Perfil />} />
@@ -96,6 +99,7 @@ export const AppRoutes = () => {
         <Route path="resenas" element={<ReviewsClient />} />
         <Route path="favoritos" element={<Favoritos />} />
         <Route path="compras" element={<SalesClient />} />
+        <Route path="reportes" element={<ReportsClient />} />
         <Route path="probar-corte" element={<ProbarCorte />} />
         <Route path="reservar" element={<ReservarCita />} />
         <Route path="citas" element={<AppointmentsClient />} />

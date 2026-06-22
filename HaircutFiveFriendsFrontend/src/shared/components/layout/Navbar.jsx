@@ -15,6 +15,7 @@ const ROUTE_LABELS = {
   '/dashboard/perfil': 'Mi perfil',
   '/client': 'Inicio',
   '/client/reservar': 'Reservar cita',
+  '/client/reportes': 'Reportes',
   '/client/citas': 'Mis citas',
   '/client/perfil': 'Mi perfil',
   '/client/servicios': 'Servicios',

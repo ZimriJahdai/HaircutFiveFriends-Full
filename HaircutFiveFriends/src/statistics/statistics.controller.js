@@ -3,6 +3,9 @@
 import PDFDocument from 'pdfkit'
 import Sale from '../sale/sale.model.js'
 import Detail from '../detailSale/detail.model.js'
+import Appointment from '../appointment/appointment.model.js'
+import Client from '../client/client.model.js'
+import generateClientStatisticsPDF from './clientStatistics.pdf.js'
 
 export const generateStatisticsReport = async (req, res) => {
     try {
@@ -139,3 +142,53 @@ export const generateStatisticsReport = async (req, res) => {
         })
     }
 }
+
+export const generateClientStatisticsReport = async (req, res) => {
+    try {
+        const client = req.clientFromToken;
+        if (!client) {
+            return res.status(404).json({ success: false, message: 'Cliente no encontrado' });
+        }
+
+        const completedSales = await Sale.find({ clientId: client._id, status: 'COMPLETADO' })
+            .sort({ saleDate: -1 })
+            .lean();
+
+        const upcomingAppointments = await Appointment.find({
+            clienteId: client._id,
+            appointmentDate: { $gte: new Date() },
+            status: { $ne: 'CANCELADO' }
+        })
+            .populate('barberId', 'name')
+            .populate('serviceId', 'name')
+            .sort({ appointmentDate: 1 })
+            .limit(6)
+            .lean();
+
+        const totalSales = completedSales.length;
+        const totalSpent = completedSales.reduce((acc, sale) => acc + (sale.total || 0), 0);
+
+        const data = {
+            clientName: client.name,
+            points: client.points ?? 0,
+            totalAppointments: await Appointment.countDocuments({ clienteId: client._id }),
+            totalSales,
+            totalSpent,
+            upcomingAppointments,
+            recentSales: completedSales.slice(0, 6).map((sale) => ({
+                saleDate: sale.saleDate,
+                total: sale.total,
+                status: sale.status,
+            })),
+        };
+
+        const pdfBuffer = await generateClientStatisticsPDF(data);
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=client_statistics_report_${client._id.toString().slice(-6)}.pdf`);
+        return res.status(200).send(pdfBuffer);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
