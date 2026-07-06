@@ -453,3 +453,34 @@ export const deleteSale = async (req, res) => {
         return res.status(500).json({ success: false, message: 'Error deleting sale', err })
     }
 }
+
+// Cancela una venta. El cliente (USER_ROLE) solo puede cancelar las suyas;
+// ADMIN/EMPLOYEE pueden cancelar cualquiera.
+export const cancelSale = async (req, res) => {
+    try {
+        const { id } = req.params
+        const sale = await Sale.findById(id)
+        if (!sale) {
+            return res.status(404).json({ success: false, message: 'Compra no encontrada' })
+        }
+
+        if (req.userRole === 'USER_ROLE') {
+            const client = await Client.findOne({ userId: req.userId })
+            if (!client || sale.clientId.toString() !== client._id.toString()) {
+                return res.status(403).json({ success: false, message: 'No puedes cancelar esta compra' })
+            }
+        }
+
+        if (sale.status === 'CANCELADO') {
+            return res.status(400).json({ success: false, message: 'La compra ya está cancelada' })
+        }
+
+        sale.status = 'CANCELADO'
+        await sale.save()
+
+        return res.status(200).json({ success: true, message: 'Compra cancelada', sale })
+    } catch (err) {
+        console.error(err)
+        return res.status(500).json({ success: false, message: 'Error al cancelar la compra', err })
+    }
+}

@@ -1,9 +1,16 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useCartStore } from '../store/cartStore.js';
+import { PurchaseModal } from '../../sales/components/PurchaseModal.jsx';
 
 export const CartModal = ({ onClose }) => {
   const { items, removeItem, updateQuantity, getTotal, clearCart } = useCartStore();
   const overlayRef = useRef(null);
+  const [checkout, setCheckout] = useState(false);
+
+  const handlePurchaseSuccess = () => {
+    setCheckout(false);
+    onClose();
+  };
 
   useEffect(() => {
     const handleKey = (e) => {
@@ -120,7 +127,7 @@ export const CartModal = ({ onClose }) => {
                 Vaciar carrito
               </button>
               <button
-                onClick={onClose}
+                onClick={() => setCheckout(true)}
                 className="flex-1 px-4 py-2.5 rounded-xl bg-[#00D2C4] text-[#0A0A0A] text-sm font-bold hover:bg-[#00B4A8] transition-all shadow-[0_4px_16px_rgba(0,210,196,0.2)] cursor-pointer"
               >
                 Ir a pagar
@@ -129,6 +136,14 @@ export const CartModal = ({ onClose }) => {
           </div>
         )}
       </div>
+
+      {checkout && (
+        <PurchaseModal
+          initialItems={items}
+          onClose={() => setCheckout(false)}
+          onSuccess={handlePurchaseSuccess}
+        />
+      )}
     </div>
   );
 };
