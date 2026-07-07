@@ -8,7 +8,8 @@ import {
     getSales,
     getSaleById,
     updateSale,
-    deleteSale
+    deleteSale,
+    cancelSale
 } from './sale.controller.js'
 import { uploadProfilePicture } from '../../middlewares/file-uploader.js'
 import { validateSaleRequest } from '../../middlewares/sale-validator.js'
@@ -56,6 +57,13 @@ router.put(
     authorizeRoles('ADMIN_ROLE', 'USER_ROLE', 'EMPLOYEE_ROLE'),
     uploadProfilePicture.none(),
     addDetailsToSale
+)
+
+router.put(
+    '/:id/cancel',
+    validateJWT,
+    authorizeRoles('ADMIN_ROLE', 'USER_ROLE', 'EMPLOYEE_ROLE'),
+    cancelSale
 )
 
 router.delete(

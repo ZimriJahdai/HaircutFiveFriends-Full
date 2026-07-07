@@ -44,15 +44,52 @@ export const getClients = async (req, res) => {
     }
 }
 
-// Devuelve el cliente de Mongo vinculado al usuario autenticado (por userId del token)
+// Devuelve el cliente de Mongo vinculado al usuario autenticado.
+// Lo resuelve por userId; si no existe, intenta por email (y enlaza el userId);
+// si tampoco existe, lo crea a partir de los datos del token.
 export const getMyClient = async (req, res) => {
     try {
-        const client = await Client.findOne({ userId: req.userId })
-            .select('name email phone points faceshape profilePicture');
+        const email = (req.auth?.email || req.auth?.Email || '').toLowerCase();
+
+        // 1. Por userId del token
+        let client = await Client.findOne({ userId: req.userId });
+
+        // 2. Por email; si lo encuentra, enlaza el userId para futuras búsquedas
+        if (!client && email) {
+            client = await Client.findOne({ email });
+            if (client && client.userId !== req.userId) {
+                client.userId = req.userId;
+                await client.save();
+            }
+        }
+
+        // 3. No existe aún: crear el perfil de cliente con los datos del token
+        if (!client && email) {
+            client = await Client.create({
+                userId: req.userId,
+                name: req.auth?.name || email.split('@')[0] || 'Cliente',
+                email,
+                phone: req.auth?.phone || '00000000',
+                password: Math.random().toString(36).slice(2),
+            });
+        }
+
         if (!client) {
             return res.status(404).json({ success: false, message: 'Cliente no encontrado para el usuario autenticado' });
         }
-        return res.status(200).json({ success: true, data: client });
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                _id: client._id,
+                name: client.name,
+                email: client.email,
+                phone: client.phone,
+                points: client.points || 0,
+                faceshape: client.faceshape,
+                profilePicture: client.profilePicture,
+            },
+        });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });
     }

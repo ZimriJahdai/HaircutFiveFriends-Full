@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import NavbarClient from '../../client/components/NavbarClient.jsx';
-import { getMySales, getMyClient } from '../../../shared/api/sales';
-import { PurchaseModal } from '../components/PurchaseModal';
+import { getMySales } from '../../../shared/api/sales';
 
 const STATUS_STYLE = {
   COMPLETADO: { bg: '#0A2A3A', text: '#5ABDD0', border: '#0A4A5A', label: 'Completado', icon: 'ti-circle-check' },
@@ -193,12 +192,8 @@ export const SalesClient = () => {
   const [sales, setSales]           = useState([]);
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState('');
-  const [success, setSuccess]       = useState('');
-  const [clientId, setClientId]     = useState('');
-  const [points, setPoints]         = useState(0);
   const [filterStatus, setFilter]   = useState('ALL');
   const [detail, setDetail]         = useState(null);
-  const [showPurchase, setShowPurchase] = useState(false);
 
   const loadSales = useCallback(async () => {
     setLoading(true);
@@ -212,23 +207,7 @@ export const SalesClient = () => {
     }
   }, []);
 
-  const loadClient = useCallback(async () => {
-    try {
-      const res = await getMyClient();
-      setClientId(res.data?.data?._id || '');
-      setPoints(res.data?.data?.points || 0);
-    } catch {
-      /* el cliente puede no tener registro de Mongo aún */
-    }
-  }, []);
-
-  useEffect(() => { void loadSales(); void loadClient(); }, [loadSales, loadClient]);
-
-  useEffect(() => {
-    if (!success) return;
-    const t = setTimeout(() => setSuccess(''), 5000);
-    return () => clearTimeout(t);
-  }, [success]);
+  useEffect(() => { void loadSales(); }, [loadSales]);
 
   const stats = useMemo(() => ({
     total:      sales.length,
@@ -248,39 +227,15 @@ export const SalesClient = () => {
     { key: 'CANCELADO',  label: 'Canceladas' },
   ];
 
-  const handlePurchaseSuccess = (msg) => {
-    setShowPurchase(false);
-    setSuccess(msg);
-    void loadSales();
-    void loadClient();
-  };
-
-  const openPurchase = () => {
-    if (!clientId) {
-      setError('No se encontró tu perfil de cliente. Recarga la página e inténtalo de nuevo.');
-      return;
-    }
-    setShowPurchase(true);
-  };
-
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-white flex flex-col font-sans">
       <NavbarClient />
 
       <main className="flex-1 max-w-[1200px] w-full mx-auto px-6 py-10">
         {/* Header */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-8">
-          <div>
-            <h1 className="font-['Bebas_Neue',sans-serif] text-4xl tracking-[3px] text-[#E8E4DC] m-0">Mis Compras</h1>
-            <p className="text-[13px] text-[#5A5A5A] mt-1">Revisa el historial de tus pedidos y realiza nuevas compras.</p>
-          </div>
-          <button
-            onClick={openPurchase}
-            className="flex items-center gap-2 bg-[#00D2C4] hover:bg-[#00E8D8] text-[#0A0A0A] border-none rounded-xl px-5 py-3 text-[13px] font-bold cursor-pointer transition-colors focus:outline-none shadow-[0_0_16px_rgba(0,210,196,0.25)] shrink-0"
-          >
-            <i className="ti ti-shopping-cart text-base" aria-hidden="true" />
-            Nueva compra
-          </button>
+        <div className="mb-8">
+          <h1 className="font-['Bebas_Neue',sans-serif] text-4xl tracking-[3px] text-[#E8E4DC] m-0">Mis Compras</h1>
+          <p className="text-[13px] text-[#5A5A5A] mt-1">Historial de tus pedidos. Para comprar, agrega productos al carrito y ve a pagar.</p>
         </div>
 
         <div className="h-[1px] bg-[#00D2C4]/20 mb-8" />
@@ -300,12 +255,6 @@ export const SalesClient = () => {
         </div>
 
         {/* Alerts */}
-        {success && (
-          <div className="bg-[#152A2A] border border-[#205A50] rounded-xl px-4 py-3 text-[13px] text-[#8EE] mb-6 flex items-center gap-2">
-            <i className="ti ti-circle-check text-lg" aria-hidden="true" />
-            {success}
-          </div>
-        )}
         {error && (
           <div className="bg-[#2A1515] border border-[#5A2020] rounded-xl px-4 py-3 text-[13px] text-[#E88] mb-6 flex items-center gap-2">
             <i className="ti ti-alert-circle text-lg" aria-hidden="true" />
@@ -343,15 +292,8 @@ export const SalesClient = () => {
               <p className="text-[15px] font-medium text-[#444] mb-1">
                 {filterStatus === 'ALL' ? 'Aún no tienes compras' : `Sin compras ${filterStatus.toLowerCase()}s`}
               </p>
-              <p className="text-[13px]">Realiza tu primera compra y aparecerá aquí.</p>
+              <p className="text-[13px]">Agrega productos al carrito y ve a pagar para hacer tu primera compra.</p>
             </div>
-            <button
-              onClick={openPurchase}
-              className="flex items-center gap-2 bg-[#00D2C4] hover:bg-[#00E8D8] text-[#0A0A0A] border-none rounded-xl px-5 py-2.5 text-[13px] font-bold cursor-pointer transition-colors focus:outline-none"
-            >
-              <i className="ti ti-shopping-cart text-base" aria-hidden="true" />
-              Comprar ahora
-            </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -361,15 +303,6 @@ export const SalesClient = () => {
           </div>
         )}
       </main>
-
-      {showPurchase && (
-        <PurchaseModal
-          clientId={clientId}
-          clientPoints={points}
-          onClose={() => setShowPurchase(false)}
-          onSuccess={handlePurchaseSuccess}
-        />
-      )}
 
       {detail && (
         <SaleDetailDrawer sale={detail} onClose={() => setDetail(null)} />
