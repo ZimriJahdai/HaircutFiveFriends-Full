@@ -33,26 +33,26 @@ export const ProbarCorte = () => {
   const [length, setLength] = useState('');
   const [style, setStyle] = useState('');
 
-  const [hairBitmap, setHairBitmap] = useState(null);
+  const [hairAsset, setHairAsset] = useState(null);
   const [segmenting, setSegmenting] = useState(false);
   const [arActive, setArActive] = useState(false);
 
   // Espejo en ref para liberar el ImageBitmap actual al desmontar sin recrear efectos.
-  const hairBitmapRef = useRef(null);
+  const hairAssetRef = useRef(null);
   useEffect(() => {
-    hairBitmapRef.current = hairBitmap;
-  }, [hairBitmap]);
-  useEffect(() => () => hairBitmapRef.current?.close?.(), []);
+    hairAssetRef.current = hairAsset;
+  }, [hairAsset]);
+  useEffect(() => () => hairAssetRef.current?.bitmap?.close?.(), []);
 
   // Limpia el object URL de la previsualizacion al cambiar/desmontar.
   useEffect(() => () => {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
   }, [previewUrl]);
 
-  const replaceHairBitmap = (bitmap) => {
-    setHairBitmap((prev) => {
-      if (prev && prev !== bitmap) prev.close?.();
-      return bitmap;
+  const replaceHairAsset = (asset) => {
+    setHairAsset((prev) => {
+      if (prev && prev.bitmap !== asset?.bitmap) prev.bitmap?.close?.();
+      return asset;
     });
   };
 
@@ -90,8 +90,8 @@ export const ProbarCorte = () => {
       if (data?.haircutImageBase64) {
         setSegmenting(true);
         try {
-          const bitmap = await segmentHairToBitmap(data.haircutImageBase64);
-          replaceHairBitmap(bitmap);
+          const asset = await segmentHairToBitmap(data.haircutImageBase64);
+          replaceHairAsset(asset);
         } catch {
           toast.error('No se pudo recortar el cabello del corte.');
         } finally {
@@ -111,7 +111,7 @@ export const ProbarCorte = () => {
     setLength('');
     setStyle('');
     setArActive(false);
-    replaceHairBitmap(null);
+    replaceHairAsset(null);
     reset();
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
@@ -220,7 +220,7 @@ export const ProbarCorte = () => {
 
           {/* Columna derecha: AR en vivo + retrato generado */}
           <section className="space-y-4">
-            <ArTryOnCanvas hairBitmap={hairBitmap} active={arActive} />
+            <ArTryOnCanvas hairAsset={hairAsset} active={arActive} />
 
             <button
               type="button"

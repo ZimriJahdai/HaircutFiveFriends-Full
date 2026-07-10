@@ -33,6 +33,43 @@ export const getFaceLandmarker = async () => {
   return landmarkerPromise;
 };
 
+let imageLandmarkerPromise = null;
+
+// Landmarker en modo IMAGE: mide la pose UNA vez sobre la foto estatica del
+// corte generado. Instancia separada del modo VIDEO porque MediaPipe fija el
+// runningMode al crear el task (no se puede compartir el mismo landmarker).
+const getFaceLandmarkerImage = async () => {
+  if (!imageLandmarkerPromise) {
+    imageLandmarkerPromise = (async () => {
+      const fileset = await getVisionFileset();
+      return FaceLandmarker.createFromOptions(fileset, {
+        baseOptions: { modelAssetPath: FACE_MODEL_URL, delegate: 'GPU' },
+        runningMode: 'IMAGE',
+        numFaces: 1,
+        outputFacialTransformationMatrixes: false,
+        outputFaceBlendshapes: false,
+      });
+    })();
+  }
+  return imageLandmarkerPromise;
+};
+
+// Mide la pose (frente + distancia entre sienes) de la foto estatica del corte
+// generado, en sus propias coordenadas de pixel (sin espejar: no es una
+// selfie en vivo). Permite anclar el overlay por correspondencia real entre
+// la foto y el video, en vez de asumir un encuadre fijo. Null si no detecta
+// rostro en la foto (el llamador decide el fallback).
+export const getImagePose = async (imgElement) => {
+  const landmarker = await getFaceLandmarkerImage();
+  const result = landmarker.detect(imgElement);
+  const landmarks = result?.faceLandmarks?.[0];
+  if (!landmarks) return null;
+
+  const w = imgElement.naturalWidth || imgElement.width;
+  const h = imgElement.naturalHeight || imgElement.height;
+  return getHeadPose(landmarks, w, h, false);
+};
+
 // Convierte landmarks normalizados en una pose 2D usable para el overlay.
 // `mirror` espeja la X para que coincida con un video tipo selfie (scaleX(-1)).
 // Devuelve: ancla en la frente, distancia entre sienes (escala), roll e

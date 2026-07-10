@@ -4,6 +4,7 @@
 // "sobreponer la foto entera": ahora unicamente se superpone el cabello.
 import { ImageSegmenter } from '@mediapipe/tasks-vision';
 import { getVisionFileset } from './vision.js';
+import { getImagePose } from './faceLandmarker.js';
 
 const SEG_MODEL_URL =
   'https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_multiclass_256x256/float32/latest/selfie_multiclass_256x256.tflite';
@@ -45,9 +46,12 @@ const loadImage = (src) =>
     img.src = src;
   });
 
-// Recorta el pelo del retrato (base64 o data URL) y devuelve un ImageBitmap con
-// transparencia, a resolucion del retrato original. Se ejecuta UNA vez por
-// recomendacion (no por frame) y conviene cachear el resultado.
+// Recorta el pelo del retrato (base64 o data URL) y devuelve el bitmap con
+// transparencia + la pose (frente y distancia entre sienes) medida sobre esa
+// misma foto. La pose permite anclar el overlay en vivo por correspondencia
+// real (frente-con-frente, escala por distancia entre sienes) en vez de
+// asumir un encuadre fijo. Se ejecuta UNA vez por recomendacion (no por
+// frame) y conviene cachear el resultado.
 export const segmentHairToBitmap = async (base64Image) => {
   const src = toDataUrl(base64Image);
   if (!src) return null;
@@ -55,6 +59,14 @@ export const segmentHairToBitmap = async (base64Image) => {
   const img = await loadImage(src);
   const w = img.naturalWidth || img.width;
   const h = img.naturalHeight || img.height;
+
+  // Pose de la foto generada (sin espejar). Si no se detecta rostro, se usa
+  // un fallback razonable para no perder el overlay por completo.
+  const sourcePose = (await getImagePose(img)) || {
+    forehead: { x: w / 2, y: h * 0.22 },
+    templeDist: w * 0.42,
+    roll: 0,
+  };
 
   const segmenter = await getSegmenter();
   const result = segmenter.segment(img);
@@ -92,5 +104,5 @@ export const segmentHairToBitmap = async (base64Image) => {
   octx.imageSmoothingEnabled = true;
   octx.drawImage(maskCanvas, 0, 0, w, h);
 
-  return createImageBitmap(out);
+  return { bitmap: await createImageBitmap(out), sourcePose };
 };

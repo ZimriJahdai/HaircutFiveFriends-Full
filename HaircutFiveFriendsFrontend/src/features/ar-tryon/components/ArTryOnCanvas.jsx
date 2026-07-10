@@ -5,18 +5,14 @@ import { getHeadPose } from '../../../shared/ar/faceLandmarker.js';
 // Vista de selfie: el video se espeja (scaleX(-1)) y la pose se calcula espejada
 // para que el corte coincida con lo que el usuario ve como en un espejo.
 const MIRROR = true;
-// El recorte de pelo cubre algo mas ancho que la cara.
-const WIDTH_FACTOR = 2.6;
-// Punto del recorte que se ancla a la frente (0=arriba, 1=abajo del recorte).
-const ANCHOR_V = 0.72;
 
-export const ArTryOnCanvas = ({ hairBitmap, active, onStatusChange }) => {
+export const ArTryOnCanvas = ({ hairAsset, active, onStatusChange }) => {
   const canvasRef = useRef(null);
-  const hairRef = useRef(hairBitmap);
+  const hairRef = useRef(hairAsset);
 
   useEffect(() => {
-    hairRef.current = hairBitmap;
-  }, [hairBitmap]);
+    hairRef.current = hairAsset;
+  }, [hairAsset]);
 
   const handleResults = useCallback((result, video) => {
     const canvas = canvasRef.current;
@@ -32,12 +28,21 @@ export const ArTryOnCanvas = ({ hairBitmap, active, onStatusChange }) => {
     ctx.clearRect(0, 0, w, h);
 
     const faces = result.faceLandmarks;
-    const hair = hairRef.current;
-    if (!hair || !faces || faces.length === 0) return;
+    const asset = hairRef.current;
+    if (!asset?.bitmap || !faces || faces.length === 0) return;
 
+    const { bitmap: hair, sourcePose } = asset;
     const pose = getHeadPose(faces[0], w, h, MIRROR);
-    const overlayW = pose.templeDist * WIDTH_FACTOR;
-    const overlayH = overlayW * (hair.height / hair.width);
+
+    // Escala real: relacion entre la distancia-entre-sienes en vivo y la
+    // medida en la foto generada (en vez de un factor de ancho inventado).
+    const scale = pose.templeDist / sourcePose.templeDist;
+    const overlayW = hair.width * scale;
+    const overlayH = hair.height * scale;
+    // Punto de la frente en la foto generada, escalado: es el punto del
+    // recorte que se debe alinear con la frente detectada en vivo.
+    const anchorX = sourcePose.forehead.x * scale;
+    const anchorY = sourcePose.forehead.y * scale;
 
     ctx.save();
     // Anclar a la frente con un leve desplazamiento horizontal segun el giro.
@@ -45,7 +50,7 @@ export const ArTryOnCanvas = ({ hairBitmap, active, onStatusChange }) => {
     ctx.rotate(pose.roll);
     // Cizalla horizontal leve para sugerir profundidad al girar la cabeza.
     ctx.transform(1, 0, Math.max(-0.6, Math.min(0.6, pose.yaw * 0.25)), 1, 0, 0);
-    ctx.drawImage(hair, -overlayW / 2, -overlayH * ANCHOR_V, overlayW, overlayH);
+    ctx.drawImage(hair, -anchorX, -anchorY, overlayW, overlayH);
     ctx.restore();
   }, []);
 
@@ -88,7 +93,7 @@ export const ArTryOnCanvas = ({ hairBitmap, active, onStatusChange }) => {
         </div>
       )}
 
-      {status === 'running' && !hairBitmap && (
+      {status === 'running' && !hairAsset && (
         <div className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-black/70 px-4 py-1.5 text-xs text-zinc-300">
           Analiza una foto para superponer el corte
         </div>
