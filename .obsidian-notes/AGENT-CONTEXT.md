@@ -52,12 +52,13 @@ graph TD
 * **Current SDK:** `@google/genai` (v1.50.1) in `AiServiceServer`.
 * **Authentication Method:** Application Default Credentials (ADC) with Google Cloud credentials (`gcloud auth application-default login`). No hardcoded API keys allowed.
 * **Client Pattern:** Per-region lazy singletons in `AiServiceServer/configs/genai.js`. `getGenAI(location?)` caches one `GoogleGenAI({ vertexai, project, location })` per region in a `Map` (no arg → `GCP_LOCATION` = `us-central1`). `location` is fixed at client construction, so multiple regions = multiple clients.
-* **Region Mapping:** TEXT (Gemini 3.x) runs only on the **`global`** endpoint (`LOCATIONS.TEXT`, override `VERTEX_TEXT_LOCATION`); Vision / Image / Live / Reviews stay on `us-central1`.
+* **Region Mapping:** any Gemini **3.x** model on Vertex only works on the **`global`** endpoint (`LOCATIONS.TEXT`, override `VERTEX_TEXT_LOCATION`) — confirmed via direct REST calls for TEXT, VISION and IMAGE. Only pre-3.x (2.x) models are confirmed on regional endpoints like `us-central1` (Live, Summary/Reviews).
 * **Models Mapping:**
-  - **Text / Chatbot:** set via `VERTEX_TEXT_MODEL` (user uses a **GA** model, NOT `gemini-3.1-flash-lite-preview` — preview needs project allowlist)
-  - **Facial Analysis (Vision):** `gemini-3.5-flash`
-  - **Image Generation:** `gemini-3-pro-image-preview`
-  - **Real-time Live Audio:** `gemini-live-2.5-flash-native-audio`
+  - **Text / Chatbot:** set via `VERTEX_TEXT_MODEL` (user uses a **GA** model, NOT `gemini-3.1-flash-lite-preview` — preview needs project allowlist) — `global`
+  - **Facial Analysis (Vision):** `gemini-3.5-flash` — `global` (fixed 2026-07-09: `services/genaiService.js` was calling bare `getGenAI()` → defaulted to `us-central1` → silent 404)
+  - **Image Generation:** `gemini-3-pro-image-preview` — `global` (same fix)
+  - **Real-time Live Audio:** `gemini-live-2.5-flash-native-audio` — `us-central1`
+  - **Voice-reply Summary:** `gemini-2.5-flash-lite` — `us-central1` (2.x model, regional is fine)
 
 ---
 

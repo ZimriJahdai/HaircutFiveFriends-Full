@@ -30,9 +30,11 @@ HaircutFiveFriendsFrontend/
     │   ├── client/              # Perfil de cliente, historial de visitas y puntos
     │   ├── client-admin/        # Gestión administrativa global de clientes (Solo Admin)
     │   ├── favorites/           # Sección de cortes de cabello guardados
-    │   └── haircut/             # Galería visual de cortes de cabello de la barbería
+    │   ├── haircut/             # Galería visual de cortes de cabello de la barbería
+    │   └── ar-tryon/            # Prueba de corte en AR vía webcam (ruta /client/probar-corte)
     ├── shared/
-    │   ├── api/                 # Cliente de Axios configurado con interceptor de tokens
+    │   ├── api/                 # Cliente de Axios configurado con interceptor de tokens (incl. aiHaircut.js)
+    │   ├── ar/                  # MediaPipe Tasks Vision: FaceLandmarker + ImageSegmenter (hair cutout)
     │   ├── components/          # Botones, entradas de formulario, loaders compartidos
     │   └── utils/               # Formateadores de fecha, gestores de almacenamiento
     └── styles/
@@ -56,4 +58,22 @@ HaircutFiveFriendsFrontend/
 
 - **Autenticación (Puerto 3005):** Consume `VITE_AUTH_URL` para validar claves, crear sesiones y renovar tokens de seguridad JWT.
 - **Negocio (Puerto 3006):** Consume `VITE_API_URL` para registrar citas, actualizar perfiles de barberos, ver estadísticas de ganancias e interactuar con el catálogo físico de servicios.
+- **IA (Puerto 3007):** Consume `VITE_AI_URL` (`src/shared/api/aiHaircut.js`) directo contra `AiServiceServer` para `/api/ai-haircut/analyze` (análisis facial + generación del corte con Gemini). Reusa el mismo JWT que AuthService.
 - **Políticas de Desecho:** Uso de `AbortController` integrado en llamadas de red clave para abortar respuestas en desmonte y evitar fugas de memoria.
+
+---
+
+## 4. Feature: AR Try-On (`ar-tryon`, ruta `/client/probar-corte`)
+
+Prueba de corte en AR **100% en el navegador** (reemplaza al antiguo microservicio Python
+`HaircutAR`, jubilado — ver [[2026-06-18-haircutar-ar-navegador]]). Flujo: sube/genera un
+corte vía `/api/ai-haircut/analyze` (puerto 3007) → `shared/ar/hairSegmentation.js` recorta
+SOLO el pelo con alfa (`ImageSegmenter`) → `shared/ar/faceLandmarker.js` (`FaceLandmarker`,
+GPU) sigue la cabeza en vivo por webcam y el pelo se dibuja encima en un `<canvas>`.
+
+**Estado por fases:**
+- ✅ **Fase 1 (hecho):** recorte 2D que sigue posición/escala/roll de la cabeza (giro con
+  aproximación de yaw). Sin dependencias de Python ni streaming server-side.
+- ⏳ **Fase 2 (pendiente, no iniciada):** modelo 3D de pelo (Three.js) anclado con la matriz
+  de transformación facial + oclusión por profundidad, para que no pierda realismo en giros
+  fuertes de cabeza (el retrato de Gemini es frontal/estático).

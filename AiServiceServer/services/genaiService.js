@@ -1,7 +1,7 @@
 import { Modality } from "@google/genai";
 import fs from "fs/promises";
 import path from "path";
-import { getGenAI, MODELS } from "../configs/genai.js";
+import { getGenAI, MODELS, LOCATIONS } from "../configs/genai.js";
 
 // Cliente y modelos centralizados en configs/genai.js (singleton + ADC).
 // describeFace usa el modelo de VISION (distinto del chatbot/texto).
@@ -188,7 +188,7 @@ export async function describeFace({ imageBase64, imagePath, mimeType }) {
   if (!base64) throw new Error("No se proporciono imagen en base64");
 
   const response = await generateWithRetry(async () => {
-    return await getGenAI().models.generateContent({
+    return await getGenAI(LOCATIONS.TEXT).models.generateContent({
       model: VISION_MODEL,
       contents: [
         "Analiza el rostro y responde SOLO con un JSON valido (sin markdown ni texto extra) con estas claves exactas: faceShape, hairTexture, hairColor, facialLines, recommendedHaircutStyle. Cada valor debe ser una frase breve en espanol.",
@@ -216,7 +216,7 @@ export async function proposeHaircutImage(
   const editPrompt = buildHaircutPrompt(faceSummary, { haircutName, description, length, style });
 
   const response = await generateWithRetry(async () => {
-    return await getGenAI().models.generateContent({
+    return await getGenAI(LOCATIONS.TEXT).models.generateContent({
       model: GEMINI_IMAGE_MODEL,
       contents: [
         { inlineData: { data: base64, mimeType: mime } },

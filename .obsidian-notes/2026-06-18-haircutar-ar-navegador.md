@@ -34,10 +34,23 @@ la foto de la persona". Se reimplementó **100% en el navegador**, acelerado por
 ### Repo externo `HaircutAR`
 - `README.md` de deprecación + banner en `AI_DEVELOPMENT_LOG.md` (código histórico).
 
-## Pendiente (Fase 2)
-- 3D con **Three.js** (modelo de pelo anclado con la matriz de pose + oclusión). El recorte
-  2D actual pierde realismo en giros fuertes porque el retrato de Gemini es frontal/estático.
+## Estado por fases
+- ✅ **Fase 1 — hecho:** recorte 2D del pelo (con alfa) siguiendo posición/escala/roll de la
+  cabeza en vivo, todo en el navegador. Ver detalle y ubicación de archivos en
+  [[HaircutFiveFriendsFrontend]] (sección "Feature: AR Try-On").
+- ⏳ **Fase 2 — pendiente, no iniciada:** 3D con **Three.js** (modelo de pelo anclado con la
+  matriz de pose + oclusión). El recorte 2D actual pierde realismo en giros fuertes porque el
+  retrato de Gemini es frontal/estático. No empezar sin pedirlo explícitamente.
 
-## Verificación
+## Verificación — qué falta probar
 `pnpm build` y `pnpm lint` del frontend principal en verde. Requiere `AiServiceServer` (3007)
 arriba; `getUserMedia` necesita `localhost` o HTTPS.
+
+**Importante:** esto se implementó en una sesión cloud sin cámara ni GPU física, así que
+**nunca se probó en vivo con webcam real**. Falta verificar con hardware real (ideal: la RX
+550 que motivó el reporte original):
+- que el pelo siga la cabeza sin lag notable (objetivo ~30 fps),
+- que el recorte de `ImageSegmenter` realmente aísle solo el pelo (no reaparezca la cara/foto
+  completa en algún ángulo o iluminación),
+- comportamiento en giros de cabeza fuertes (donde se espera que se note la limitación 2D
+  mencionada en Fase 2).

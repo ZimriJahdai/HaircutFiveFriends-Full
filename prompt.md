@@ -216,6 +216,6 @@ cada cambio**. Sugerencia de fan-out:
 - **react-router:** destino es **v7**; adapta el routing portado, no copies el v6 del AI client.
 
 ## Cierre (obligatorio)
-- Log en `.obisidian-notes/logs/` (convención: `YYYY-MM-DD-<tema>.md`, frontmatter `tags`/`date`, enlaces `[[...]]`).
+- Log en `.obsidian-notes/logs/` (convención: `YYYY-MM-DD-<tema>.md`, frontmatter `tags`/`date`, enlaces `[[...]]`).
 - Actualiza `estructura/HaircutFiveFriendsFrontend.md` y `AGENT-CONTEXT.md` (rutas/env/deps nuevas,
   baja de `AiServiceClient`).
