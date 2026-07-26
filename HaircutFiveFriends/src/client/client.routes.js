@@ -4,7 +4,7 @@ import express from 'express';
 import { createClient, getClients, getClientById, updateClient, deleteClient, getClientPoints } from './client.controller.js';
 import { uploadProfilePicture } from '../../middlewares/file-uploader.js';
 import { validateCreateClient, validateUpdateClient } from '../../middlewares/client-validator.js';
-import { validateJWT, ensureClientMatchesToken, authorizeRoles } from '../../middlewares/validate-JWT.js';
+import { validateJWT, ensureClientMatchesToken, authorizeRoles, attachClientFromToken, requireClientFromToken } from '../../middlewares/validate-JWT.js';
 
 const router = express.Router();
 
@@ -16,6 +16,14 @@ router.post(
 	ensureClientMatchesToken,
 	validateCreateClient,
 	createClient
+);
+router.get(
+	'/me',
+	validateJWT,
+	authorizeRoles('ADMIN_ROLE', 'USER_ROLE', 'EMPLOYEE_ROLE'),
+	attachClientFromToken,
+	requireClientFromToken,
+	(req, res) => res.status(200).json({ success: true, data: req.clientFromToken })
 );
 router.get(
 	'/',

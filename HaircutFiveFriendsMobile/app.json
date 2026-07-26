@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "HaircutFiveFriendsMobile",
+    "slug": "HaircutFiveFriendsMobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "haircutfivefriends",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0A0A0A"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0A0A0A",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Necesitamos acceso a tus fotos para elegir tu foto de perfil."
+        }
+      ],
+      "expo-sharing"
+    ]
+  }
+}

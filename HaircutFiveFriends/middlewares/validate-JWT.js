@@ -79,13 +79,23 @@ export const attachClientFromToken = async (req, res, next) => {
         }
 
         if (!client && req.auth?.email) {
-            client = await Client.create({
-                userId: req.userId,
-                name: req.auth.name || req.auth.email.split('@')[0] || 'Cliente',
-                email: req.auth.email.toLowerCase(),
-                phone: req.auth.phone || '00000000',
-                password: Math.random().toString(36).slice(2),
-            });
+            try {
+                client = await Client.create({
+                    userId: req.userId,
+                    name: req.auth.name || req.auth.email.split('@')[0] || 'Cliente',
+                    email: req.auth.email.toLowerCase(),
+                    phone: req.auth.phone || '00000000',
+                    password: Math.random().toString(36).slice(2),
+                });
+            } catch (createError) {
+                // Otra petición concurrente ya creó el cliente con este email
+                // (ej. /clients/me y /appointments/mine disparados en paralelo).
+                if (createError.code === 11000) {
+                    client = await Client.findOne({ email: req.auth.email.toLowerCase() });
+                } else {
+                    throw createError;
+                }
+            }
         }
 
         req.clientFromToken = client || null;
@@ -102,15 +112,24 @@ export const attachClientFromToken = async (req, res, next) => {
 
             console.log('attachClientFromToken | Auto-creando perfil de cliente en MongoDB:', email);
 
-            client = await Client.create({
-                userId: req.userId,
-                name: name,
-                email: email || `${req.userId}@temp.com`,
-                phone: phone,
-                password: Math.random().toString(36).slice(2), // Contraseña dummy, la autenticación real ocurre en AuthService
-                status: true,
-                points: 0
-            });
+            try {
+                client = await Client.create({
+                    userId: req.userId,
+                    name: name,
+                    email: email || `${req.userId}@temp.com`,
+                    phone: phone,
+                    password: Math.random().toString(36).slice(2), // Contraseña dummy, la autenticación real ocurre en AuthService
+                    status: true,
+                    points: 0
+                });
+            } catch (createError) {
+                // Otra petición concurrente ya creó el cliente con este email.
+                if (createError.code === 11000) {
+                    client = await Client.findOne({ email });
+                } else {
+                    throw createError;
+                }
+            }
         }
 
         req.clientFromToken = client || null;
