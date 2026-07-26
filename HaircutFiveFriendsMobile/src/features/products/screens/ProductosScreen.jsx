@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 
 import { EmptyState, LoadingSpinner, Selector } from '../../../shared/components';
@@ -6,12 +6,12 @@ import { SPACING } from '../../../shared/constants/theme';
 import { useThemeStore } from '../../../shared/hooks/useThemeStore';
 import { getId } from '../../../shared/api';
 import { notify } from '../../../shared/utils/confirm';
-import { useClientProfileStore } from '../../../shared/store/clientProfileStore';
-import { FAVORITE_TYPES, SALE_DETAIL_TYPES } from '../../../shared/constants';
+import { FAVORITE_TYPES } from '../../../shared/constants';
 import { useFavorites } from '../../favorites/hooks/useFavorites';
-import { ProductCard, ProductDetailModal, RedeemConfirmModal } from '../components';
+import { ProductCard, ProductDetailModal } from '../components';
 import { useProducts } from '../hooks/useProducts';
-import { useSales } from '../../sales/hooks/useSales';
+import { useCartStore } from '../../../shared/store/cartStore';
+import { CartButton } from '../../cart/components/CartButton';
 
 const TABS = [
   { value: 'catalog', label: 'Catálogo' },
@@ -27,30 +27,35 @@ export function ProductosScreen({ navigation }) {
   const { colors } = useThemeStore();
   const styles = createStyles(colors);
   const { products, redeemable, loading, error, refetch } = useProducts();
-  const { redeemWithPoints, loading: redeeming } = useSales();
   const { isFavorite, toggleFavorite } = useFavorites();
-  const points = useClientProfileStore((state) => state.points);
+  const addItem = useCartStore((state) => state.addItem);
   const [tab, setTab] = useState('catalog');
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [redeemTarget, setRedeemTarget] = useState(null);
 
   const list = tab === 'catalog' ? products : redeemable;
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => <CartButton />,
+    });
+  }, [navigation]);
 
   const onToggleFavorite = async (productId) => {
     const result = await toggleFavorite(FAVORITE_TYPES.PRODUCT, productId);
     if (!result.ok) notify('Error', result.error);
   };
 
-  const onConfirmRedeem = async () => {
-    const result = await redeemWithPoints(redeemTarget, SALE_DETAIL_TYPES.PRODUCT);
-    setRedeemTarget(null);
+  const handleAddToCart = (product) => {
+    addItem({
+      id: getId(product),
+      type: 'PRODUCT',
+      name: product.name,
+      price: Number(product.price) || 0,
+      image: product.image || null,
+      quantity: 1,
+    });
     setSelectedProduct(null);
-    if (!result.ok) {
-      notify('Error', result.error);
-      return;
-    }
-    notify('¡Canje exitoso!', 'Revisa tu historial en Facturas.');
-    refetch();
+    notify('Agregado al carrito', `${product.name} se agregó correctamente.`);
   };
 
   if (loading && list.length === 0) return <LoadingSpinner message="Cargando productos..." />;
@@ -93,14 +98,7 @@ export function ProductosScreen({ navigation }) {
       <ProductDetailModal
         product={selectedProduct}
         onClose={() => setSelectedProduct(null)}
-        onRedeem={selectedProduct?.pointsPrice ? () => setRedeemTarget(selectedProduct) : undefined}
-      />
-      <RedeemConfirmModal
-        product={redeemTarget}
-        points={points}
-        redeeming={redeeming}
-        onConfirm={onConfirmRedeem}
-        onClose={() => setRedeemTarget(null)}
+        onAddToCart={selectedProduct ? () => handleAddToCart(selectedProduct) : undefined}
       />
     </View>
   );

@@ -35,6 +35,27 @@ export function useSales() {
     [clientId, refreshPoints]
   );
 
+  const createSale = useCallback(
+    async (details) => {
+      if (!clientId) return { ok: false, error: 'Tu perfil de cliente aún no está listo' };
+      setLoading(true);
+      try {
+        const res = await apiClient.post('/sales/create', {
+          clientId,
+          saleDate: new Date().toISOString(),
+          details,
+        });
+        await refreshPoints();
+        return { ok: true, data: unwrap(res, 'sale') };
+      } catch (error) {
+        return { ok: false, error: getApiError(error, 'No se pudo procesar el pago') };
+      } finally {
+        setLoading(false);
+      }
+    },
+    [clientId, refreshPoints]
+  );
+
   const fetchMySales = useCallback(async () => {
     try {
       const res = await apiClient.get('/sales/my-sales');
@@ -44,5 +65,5 @@ export function useSales() {
     }
   }, []);
 
-  return { loading, redeemWithPoints, fetchMySales };
+  return { loading, redeemWithPoints, createSale, fetchMySales };
 }

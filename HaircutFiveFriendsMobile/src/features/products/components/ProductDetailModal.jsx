@@ -8,7 +8,7 @@ import { formatCurrency } from '../../../shared/utils/format';
 
 // Detalle armado del item ya cargado en la lista: GET /products/:id es
 // ADMIN/EMPLOYEE-only y devuelve 403 para USER_ROLE.
-export function ProductDetailModal({ product, onClose, onRedeem, redeeming }) {
+export function ProductDetailModal({ product, onClose, onAddToCart, adding }) {
   const { colors } = useThemeStore();
   const styles = createStyles(colors);
 
@@ -35,8 +35,13 @@ export function ProductDetailModal({ product, onClose, onRedeem, redeeming }) {
           </View>
           <Text style={styles.stock}>{product.stock > 0 ? `${product.stock} disponibles` : 'Sin stock'}</Text>
 
-          {onRedeem && product.pointsPrice ? (
-            <Button title={`Canjear por ${product.pointsPrice} pts`} gradient onPress={onRedeem} loading={redeeming} />
+          {onAddToCart && product.stock > 0 ? (
+            <Button
+              title={`Agregar al carrito — ${formatCurrency(product.price)}`}
+              gradient
+              onPress={onAddToCart}
+              loading={adding}
+            />
           ) : null}
           <Button title="Cerrar" variant="ghost" onPress={onClose} />
         </View>

@@ -42,6 +42,7 @@ export function CatalogStack() {
     <CatalogStackNav.Navigator screenOptions={getStackScreenOptions(colors)}>
       <CatalogStackNav.Screen name="Servicios" component={S.Servicios} options={{ title: 'Servicios' }} />
       <CatalogStackNav.Screen name="Productos" component={S.Productos} options={{ title: 'Productos' }} />
+      <CatalogStackNav.Screen name="Carrito" component={S.Carrito} options={{ title: 'Carrito' }} />
     </CatalogStackNav.Navigator>
   );
 }
