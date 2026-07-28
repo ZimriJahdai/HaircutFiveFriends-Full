@@ -4,8 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FONTS, FONT_SIZE } from '../shared/constants/theme';
 import { useThemeStore } from '../shared/hooks/useThemeStore';
-import { BarberosStack, CatalogStack, CitasStack, HomeStack, ProfileStack } from './stacks';
-import { IAScreen } from '../features/ai/screens/IAScreen';
+import { BarberosStack, CatalogStack, CitasStack, GaleriaStack, HomeStack, ProfileStack, IAStack } from './stacks';
 
 const Tab = createBottomTabNavigator();
 
@@ -14,6 +13,7 @@ const TAB_ICONS = {
   Barberos: 'content-cut',
   Catálogo: 'storefront',
   IA: 'smartphone',
+  Estilos: 'photo-library',
   Citas: 'event',
   Perfil: 'person',
 };
@@ -24,7 +24,8 @@ const TAB_ROOT = {
   Inicio: 'Home',
   Barberos: 'Barberos',
   Catálogo: 'Servicios',
-  IA: 'IA',
+  IA: 'ProbarCorte',
+  Estilos: 'Galeria',
   Citas: 'ReservarCita',
   Perfil: 'Perfil',
 };
@@ -62,7 +63,8 @@ export function MainTabs() {
       <Tab.Screen name="Inicio" component={HomeStack} listeners={resetTabOnPress} />
       <Tab.Screen name="Barberos" component={BarberosStack} listeners={resetTabOnPress} />
       <Tab.Screen name="Catálogo" component={CatalogStack} listeners={resetTabOnPress} />
-      <Tab.Screen name="IA" component={IAScreen} listeners={resetTabOnPress} />
+      <Tab.Screen name="IA" component={IAStack} listeners={resetTabOnPress} />
+      <Tab.Screen name="Estilos" component={GaleriaStack} listeners={resetTabOnPress} />
       <Tab.Screen name="Citas" component={CitasStack} listeners={resetTabOnPress} />
       <Tab.Screen name="Perfil" component={ProfileStack} listeners={resetTabOnPress} />
     </Tab.Navigator>

@@ -7,7 +7,9 @@ import { useThemeStore } from '../../../shared/hooks/useThemeStore';
 
 const MENU = [
   { icon: 'star', label: 'Favoritos', screen: 'Favoritos' },
+  { icon: 'shopping-bag', label: 'Mis compras', screen: 'MisCompras' },
   { icon: 'receipt-long', label: 'Facturas', screen: 'Facturas' },
+  { icon: 'bar-chart', label: 'Reportes', screen: 'Reportes' },
   { icon: 'rate-review', label: 'Reseñas', screen: 'Reseñas' },
 ];
 

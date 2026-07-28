@@ -1,11 +1,13 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 
 import { Button, Card } from '../../../shared/components';
 import { useThemeStore } from '../../../shared/hooks/useThemeStore';
 import { FONTS, FONT_SIZE, RADIUS, SPACING } from '../../../shared/constants/theme';
 
 export function IAScreen() {
+  const navigation = useNavigation();
   const { colors } = useThemeStore();
   const styles = createStyles(colors);
 
@@ -41,7 +43,13 @@ export function IAScreen() {
           <Text style={styles.cardText}>
             Analiza imágenes para recomendaciones y resultados visuales.
           </Text>
-          <Button title="Próximamente" variant="secondary" disabled style={styles.cardButton} />
+          <Button
+            title="Probar corte"
+            variant="primary"
+            gradient
+            onPress={() => navigation.navigate('ProbarCorte')}
+            style={styles.cardButton}
+          />
         </Card>
       </View>
 

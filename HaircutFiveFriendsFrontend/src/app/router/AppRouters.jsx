@@ -25,6 +25,11 @@ import { Perfil } from '../../features/client/pages/Perfil.jsx';
 import { ProductsAdmin } from '../../features/products/pages/ProductsAdmin.jsx';
 import { ProductsClient } from '../../features/products/pages/ProductsClient.jsx';
 import { ProbarCorte } from '../../features/ar-tryon/pages/ProbarCorte.jsx';
+import Galeria from '../../features/client/pages/Galeria.jsx';
+import { AIDashboardPage } from '../../features/ai-suite/pages/AIDashboardPage.jsx';
+import { AIChatPage } from '../../features/ai-suite/pages/AIChatPage.jsx';
+import { AIVoicePage } from '../../features/ai-suite/pages/AIVoicePage.jsx';
+import { AIReviewsInsightsPage } from '../../features/ai-suite/pages/AIReviewsInsightsPage.jsx';
 
 import { ServicesAdmin } from '../../features/services/pages/ServicesAdmin.jsx';
 import { ServicesClient } from '../../features/services/pages/ServicesClient.jsx';
@@ -101,6 +106,11 @@ export const AppRoutes = () => {
         <Route path="compras" element={<SalesClient />} />
         <Route path="reportes" element={<ReportsClient />} />
         <Route path="probar-corte" element={<ProbarCorte />} />
+        <Route path="ia" element={<AIDashboardPage />} />
+        <Route path="ia/chat" element={<AIChatPage />} />
+        <Route path="ia/voz" element={<AIVoicePage />} />
+        <Route path="ia/resenas" element={<AIReviewsInsightsPage />} />
+        <Route path="galeria" element={<Galeria />} />
         <Route path="reservar" element={<ReservarCita />} />
         <Route path="citas" element={<AppointmentsClient />} />
         <Route path="perfil" element={<Perfil />} />
