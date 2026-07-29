@@ -20,9 +20,9 @@ JWT_AUDIENCE=The5FadeFriends
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_ENABLE_SSL=true
-SMTP_USERNAME=angelgeovannyvinasco@gmail.com
-SMTP_PASSWORD=cvni eisi nwwd lqyt
-EMAIL_FROM=angelgeovannyvinasco@gmail.com
+SMTP_USERNAME=tomaniston78@gmail.com
+SMTP_PASSWORD=pytr wxge eaqp ygrk
+EMAIL_FROM=tomaniston78@gmail.com
 EMAIL_FROM_NAME=Auth HaircutFiveFriends
  
 # Cloudinary (upload de perfiles)
